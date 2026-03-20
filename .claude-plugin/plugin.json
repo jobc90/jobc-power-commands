@@ -1,0 +1,8 @@
+{
+  "name": "jobc-power-commands",
+  "description": "3 power commands for Claude Code: /check (parallel review + deploy), /cowork (agent teams orchestration), /super (full pipeline from planning to deploy)",
+  "version": "1.0.0",
+  "author": {
+    "name": "jobc90"
+  }
+}
