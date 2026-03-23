@@ -124,26 +124,26 @@ Wave 3 (순차): import 정리, 미사용 코드 제거
 | **SHIP** | 커밋 + 푸시 + PR | git, gh CLI |
 | **DOCUMENT** | 릴리즈 노트 + 문서 갱신 | /sprint, /revise-claude-md, /sync-docs |
 
-### --design 플래그
+### design.md 자동 감지
 
-`--design <프리셋>`으로 프론트엔드 디자인 규칙을 파이프라인 전체에 적용합니다:
-
-| 프리셋 | 스타일 |
-|--------|--------|
-| `--design` | taste-skill 기본 (V8/M6/D4) |
-| `--design soft` | 에이전시급 프리미엄 |
-| `--design minimal` | 에디토리얼 미니멀리즘 |
-| `--design brutal` | 대시보드/터미널 |
-| `--design v2m3d9` | 커스텀 다이얼 |
+프로젝트에 `design.md`가 있으면 `--design` 플래그 없이도 디자인 규칙이 자동 적용됩니다.
+`--design <프리셋>`으로 명시 지정하면 자동 감지보다 우선합니다.
 
 ### 사용법
 
 ```bash
+# 기본 (디자인 없이)
 /super 로그인에 2FA 추가
 /super --pr 결제 모듈 리팩토링
-/super --skip-discover PRD가 이미 있으니 Plan부터
-/super --design soft 기획서와 design.md를 읽고 서비스 전체 구현
-/super --design v2m3d9 --pr 관리자 대시보드 구현 후 PR까지
+
+# 디자인 명시 지정
+/super --design landing 기획서 기반 서비스 구현
+/super --design dashboard --pr 관리자 대시보드
+
+# design.md 자동 감지 (가장 편한 방법)
+/design init                    # 최초 1회 — design.md 생성
+/super 서비스 전체 구현해줘      # design.md 자동 감지
+/super 디자인 리팩토링해줘       # 리디자인도 동일
 ```
 
 ---
@@ -191,6 +191,15 @@ DETECT → RESEARCH → STRUCTURE → DRAFT → REVIEW → DELIVER
 
 3개 다이얼로 디자인 톤을 제어합니다. [taste-skill](https://github.com/Leonxlnx/taste-skill) 생태계를 통합 진입점 하나로 활용합니다.
 
+### /design init — design.md 자동 생성
+
+```bash
+/design init
+# → 기존 코드가 있으면: 스캔 → 감사 → 목표 질문 → design.md 생성 (리디자인)
+# → 새 프로젝트면: 용도 질문 → design.md 생성
+# → 이후 /super가 design.md를 자동 감지하여 디자인 규칙 적용
+```
+
 ### 3-다이얼 시스템
 
 | 다이얼 | 1-3 | 4-7 | 8-10 |
@@ -199,24 +208,35 @@ DETECT → RESEARCH → STRUCTURE → DRAFT → REVIEW → DELIVER
 | **MOTION** (애니메이션) | hover 정도 | 페이드인, 스크롤링 | 마그네틱, 스프링 물리 |
 | **DENSITY** (채움도) | 럭셔리, 여유 | 일반 앱 수준 | 대시보드, 빽빽함 |
 
-### 프리셋
+### 프리셋 — 스타일명 또는 용도명
 
-| 프리셋 | V | M | D | 용도 |
-|--------|---|---|---|------|
-| (기본) | 8 | 6 | 4 | 범용 프론트엔드 |
-| `--soft` | 7 | 8 | 3 | 랜딩, 포트폴리오, SaaS |
-| `--minimal` | 4 | 3 | 5 | 워크스페이스, 에디토리얼 |
-| `--brutal` | 6 | 2 | 8 | 대시보드, 데이터 헤비 |
-| `--redesign` | (분석) | (분석) | (분석) | 기존 사이트 업그레이드 |
+| 스타일명 | 용도명 | V | M | D | 용도 |
+|---------|--------|---|---|---|------|
+| (기본) | — | 8 | 6 | 4 | 범용 프론트엔드 |
+| `--soft` | `--landing` | 7 | 8 | 3 | 랜딩, SaaS |
+| `--soft` | `--portfolio` | 8 | 7 | 2 | 포트폴리오 |
+| `--minimal` | `--workspace` | 4 | 3 | 5 | 워크스페이스, 에디토리얼 |
+| `--brutal` | `--dashboard` | 6 | 2 | 8 | 대시보드, 데이터 헤비 |
+| — | `--admin` | 2 | 3 | 9 | 관리자 패널 |
+| `--redesign` | `--redesign` | (분석) | (분석) | (분석) | 기존 사이트 업그레이드 |
 
 ### 사용법
 
 ```bash
-/design --soft SaaS 랜딩페이지
-/design --brutal 실시간 모니터링 대시보드
-/design --v 2 --m 3 --d 9 관리자 대시보드
-/design --redesign 이 프로젝트 디자인 업그레이드
-/design --soft --output-guard 랜딩페이지 (코드 완전 출력)
+# design.md 생성 (최초 1회)
+/design init
+
+# 용도명으로 바로 사용 (직관적)
+/design --landing SaaS 랜딩페이지
+/design --dashboard 실시간 모니터링
+/design --workspace 팀 협업 도구
+/design --admin 관리자 패널
+
+# 커스텀 다이얼
+/design --v 8 --m 7 --d 2 럭셔리 브랜드 랜딩
+
+# 리디자인
+/design --redesign 디자인 업그레이드
 ```
 
 ---
@@ -327,9 +347,9 @@ jobc-power-commands/
 ├── commands/
 │   ├── check.md             # /check (42줄)
 │   ├── cowork.md            # /cowork (52줄)
-│   ├── design.md            # /design (179줄)
+│   ├── design.md            # /design (288줄)
 │   ├── docs.md              # /docs (202줄)
-│   └── super.md             # /super (162줄)
+│   └── super.md             # /super (180줄)
 ├── codex-skills/
 │   ├── check/
 │   │   ├── SKILL.md            # Codex 스킬 정의

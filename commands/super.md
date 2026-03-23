@@ -9,9 +9,10 @@ CRITICAL 보안 이슈에서만 중단. 그 외에는 끝까지.
 - `--skip-discover`: PRD/기획서 있으면 Plan부터
 - `--design <프리셋>`: 프론트엔드 디자인 규칙 활성화 (taste-skill 연동)
   - `--design`: taste-skill 기본값 (V8/M6/D4)
-  - `--design soft`: 에이전시급 프리미엄
-  - `--design minimal`: 에디토리얼 미니멀리즘
-  - `--design brutal`: 스위스 타이포 + 터미널
+  - `--design soft` / `--design landing`: 에이전시급 프리미엄
+  - `--design minimal` / `--design workspace`: 에디토리얼 미니멀리즘
+  - `--design brutal` / `--design dashboard`: 스위스 타이포 + 터미널
+  - `--design admin`: 관리자 패널 (V2/M3/D9)
   - `--design v3m8d2`: 커스텀 다이얼 (V/M/D 숫자 연결)
 
 ## 파이프라인
@@ -20,7 +21,16 @@ CRITICAL 보안 이슈에서만 중단. 그 외에는 끝까지.
 DISCOVER → PLAN → BUILD → CHECK → SHIP → DOCUMENT
 ```
 
-`--design` 지정 시, 디자인 규칙이 PLAN~CHECK 전 단계에 걸쳐 활성화된다.
+### design.md 자동 감지
+
+`--design` 플래그를 명시하지 않아도, 프로젝트에 `design.md` 또는 `DESIGN.md`가 존재하면 자동으로 디자인 모드를 활성화한다.
+
+**감지 순서:**
+1. `--design <프리셋>` 명시 → 해당 프리셋 사용
+2. `--design` 플래그 없음 + `design.md` 존재 → design.md 안의 `preset:` 및 다이얼 값 읽기
+3. `--design` 플래그 없음 + `design.md` 없음 → 디자인 모드 비활성화
+
+이로써 `/design init`으로 design.md를 한 번 만들면, 이후 `/super`만으로 디자인 규칙이 자동 적용된다.
 
 ---
 
@@ -47,7 +57,7 @@ DISCOVER → PLAN → BUILD → CHECK → SHIP → DOCUMENT
 **정찰:**
 1. Explore 에이전트 → 프로젝트 아키텍처, 디렉토리, 의존성 파악
 2. `code-architect` (feature-dev) → 기존 코드 패턴, 컨벤션, 핵심 파일 분석
-3. `--design` 지정 시: **design.md 또는 DESIGN.md 탐색** → 디자인 시스템 규칙 수집
+3. **design.md 또는 DESIGN.md 탐색** → 존재하면 디자인 모드 자동 활성화, 프리셋/다이얼 값 읽기
 
 **분할:**
 4. PRD/스토리를 구현 단위로 쪼갠다:
@@ -58,7 +68,7 @@ DISCOVER → PLAN → BUILD → CHECK → SHIP → DOCUMENT
    - **Wave 2** (병렬): 데이터 레이어 / UI 컴포넌트 / 테스트
    - **Wave 3** (순차): import 정리, 미사용 코드 제거
 6. 각 Wave에 에이전트별 **파일 경로 + 성공 기준** 명시
-7. `--design` 지정 시: **프론트엔드 파일 담당 에이전트에 디자인 규칙을 지시서에 포함**
+7. 디자인 모드 활성화 시: **프론트엔드 파일 담당 에이전트에 디자인 규칙을 지시서에 포함**
 
 **사용자 확인 없이** 다음 단계로 진행.
 
@@ -74,9 +84,9 @@ DISCOVER → PLAN → BUILD → CHECK → SHIP → DOCUMENT
 - 충돌 시 지휘자가 Edit으로 병합
 - 실패 시 SendMessage로 해당 에이전트 재지시 (최대 3회)
 
-#### --design 활성화 시 BUILD 추가 규칙
+#### 디자인 모드 활성화 시 BUILD 추가 규칙
 
-`--design` 플래그가 있으면, 프론트엔드를 담당하는 모든 에이전트 지시서에 아래를 추가한다:
+디자인 모드가 활성화되면(`--design` 명시 또는 design.md 자동 감지), 프론트엔드를 담당하는 모든 에이전트 지시서에 아래를 추가한다:
 
 **1. 디자인 스킬 활성화:**
 - `--design soft` → soft-skill 규칙 적용
@@ -111,7 +121,7 @@ DISCOVER → PLAN → BUILD → CHECK → SHIP → DOCUMENT
 - CRITICAL/HIGH 자동 수정 → 빌드/린트/테스트 검증
 - 3회 실패 시 중단 + 상세 보고
 
-#### --design 활성화 시 CHECK 추가 규칙
+#### 디자인 모드 활성화 시 CHECK 추가 규칙
 
 5-angle 코드 리뷰에 **6번째 앵글: 디자인 품질**을 추가한다:
 
@@ -153,10 +163,18 @@ git add <변경 파일> → git commit -m "<type>: <desc>" → git push origin <
 
 ## 사용 예시
 ```bash
+# 기본 (디자인 없이)
 /super 로그인에 2FA 추가
 /super --pr 결제 모듈 리팩토링
 /super --skip-discover PRD가 이미 있으니 Plan부터
+
+# 디자인 명시 지정
 /super --design soft 기획서와 design.md를 읽고 서비스 전체 구현
-/super --skip-discover --design minimal 기획서 있음, 미니멀 스타일로 구현
-/super --design v2m3d9 --pr 관리자 대시보드 구현 후 PR까지
+/super --design dashboard --pr 관리자 대시보드 구현 후 PR까지
+
+# design.md 자동 감지 (가장 편한 방법)
+# 1. /design init 으로 design.md 생성 (최초 1회)
+# 2. 이후 /super만 쓰면 design.md를 자동 감지
+/super 서비스 전체 구현해줘
+/super 디자인 리팩토링해줘
 ```
