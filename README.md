@@ -109,7 +109,7 @@ Wave 3 (순차): import 정리, 미사용 코드 제거
 
 ## /super — 기획 → 구현 → 리뷰 → 배포 전자동 파이프라인
 
-아이디어 한 줄에서 배포까지. `/cowork`(병렬 구현) + `/check`(리뷰+배포)를 조합한 풀 파이프라인.
+아이디어 한 줄에서 배포까지. `/cowork`(병렬 구현) + `/check`(리뷰+배포) + `/design`(디자인 품질)을 조합한 풀 파이프라인.
 
 **원칙:** CRITICAL 보안 이슈에서만 중단. 그 외에는 끝까지.
 
@@ -118,11 +118,23 @@ Wave 3 (순차): import 정리, 미사용 코드 제거
 | 단계 | 역할 | 활용 커맨드/도구 |
 |------|------|----------------|
 | **DISCOVER** | 요구사항 구조화 | /write-prd, /write-stories, /pre-mortem, /strategy |
-| **PLAN** | 구현 계획 + 작업 분할 | Explore, code-architect, /prioritize-features, /test-scenarios |
-| **BUILD** | 병렬 구현 (/cowork 패턴) | Agent Teams, Wave 분배 |
-| **CHECK** | 병렬 리뷰 + 검증 (/check 패턴) | 5 에이전트 리뷰, 빌드/린트/테스트 |
+| **PLAN** | 구현 계획 + 작업 분할 + design.md 수집 | Explore, code-architect, /prioritize-features, /test-scenarios |
+| **BUILD** | 병렬 구현 (/cowork + /design 연동) | Agent Teams, Wave 분배, 디자인 규칙 주입 |
+| **CHECK** | 5-angle 리뷰 + 디자인 품질 체크 | 5+1 에이전트 리뷰, 빌드/린트/테스트 |
 | **SHIP** | 커밋 + 푸시 + PR | git, gh CLI |
 | **DOCUMENT** | 릴리즈 노트 + 문서 갱신 | /sprint, /revise-claude-md, /sync-docs |
+
+### --design 플래그
+
+`--design <프리셋>`으로 프론트엔드 디자인 규칙을 파이프라인 전체에 적용합니다:
+
+| 프리셋 | 스타일 |
+|--------|--------|
+| `--design` | taste-skill 기본 (V8/M6/D4) |
+| `--design soft` | 에이전시급 프리미엄 |
+| `--design minimal` | 에디토리얼 미니멀리즘 |
+| `--design brutal` | 대시보드/터미널 |
+| `--design v2m3d9` | 커스텀 다이얼 |
 
 ### 사용법
 
@@ -130,6 +142,8 @@ Wave 3 (순차): import 정리, 미사용 코드 제거
 /super 로그인에 2FA 추가
 /super --pr 결제 모듈 리팩토링
 /super --skip-discover PRD가 이미 있으니 Plan부터
+/super --design soft 기획서와 design.md를 읽고 서비스 전체 구현
+/super --design v2m3d9 --pr 관리자 대시보드 구현 후 PR까지
 ```
 
 ---
@@ -315,7 +329,7 @@ jobc-power-commands/
 │   ├── cowork.md            # /cowork (52줄)
 │   ├── design.md            # /design (179줄)
 │   ├── docs.md              # /docs (202줄)
-│   └── super.md             # /super (108줄)
+│   └── super.md             # /super (162줄)
 ├── codex-skills/
 │   ├── check/
 │   │   ├── SKILL.md            # Codex 스킬 정의

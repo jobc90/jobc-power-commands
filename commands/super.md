@@ -1,18 +1,26 @@
 # /super — 기획 → 구현 → 리뷰 → 배포 전자동 파이프라인
 
-`/cowork`(병렬 구현) + `/check`(리뷰+배포)를 조합한 풀 파이프라인.
+`/cowork`(병렬 구현) + `/check`(리뷰+배포) + `/design`(디자인 품질)을 조합한 풀 파이프라인.
 CRITICAL 보안 이슈에서만 중단. 그 외에는 끝까지.
 
 ## 인자
 - 첫 번째 인자: 작업 설명 (필수)
 - `--pr`: 푸시 후 PR 생성
-- `--skip-discover`: PRD 있으면 Plan부터
+- `--skip-discover`: PRD/기획서 있으면 Plan부터
+- `--design <프리셋>`: 프론트엔드 디자인 규칙 활성화 (taste-skill 연동)
+  - `--design`: taste-skill 기본값 (V8/M6/D4)
+  - `--design soft`: 에이전시급 프리미엄
+  - `--design minimal`: 에디토리얼 미니멀리즘
+  - `--design brutal`: 스위스 타이포 + 터미널
+  - `--design v3m8d2`: 커스텀 다이얼 (V/M/D 숫자 연결)
 
 ## 파이프라인
 
 ```
 DISCOVER → PLAN → BUILD → CHECK → SHIP → DOCUMENT
 ```
+
+`--design` 지정 시, 디자인 규칙이 PLAN~CHECK 전 단계에 걸쳐 활성화된다.
 
 ---
 
@@ -39,16 +47,18 @@ DISCOVER → PLAN → BUILD → CHECK → SHIP → DOCUMENT
 **정찰:**
 1. Explore 에이전트 → 프로젝트 아키텍처, 디렉토리, 의존성 파악
 2. `code-architect` (feature-dev) → 기존 코드 패턴, 컨벤션, 핵심 파일 분석
+3. `--design` 지정 시: **design.md 또는 DESIGN.md 탐색** → 디자인 시스템 규칙 수집
 
 **분할:**
-3. PRD/스토리를 구현 단위로 쪼갠다:
+4. PRD/스토리를 구현 단위로 쪼갠다:
    - `/prioritize-features` → impact/effort/risk 기반 우선순위
    - `/test-scenarios` → 각 기능별 QA 시나리오 (happy/edge/error)
-4. Wave 구조로 배치:
+5. Wave 구조로 배치:
    - **Wave 1** (순차): 공유 타입, 인터페이스, 유틸리티
    - **Wave 2** (병렬): 데이터 레이어 / UI 컴포넌트 / 테스트
    - **Wave 3** (순차): import 정리, 미사용 코드 제거
-5. 각 Wave에 에이전트별 **파일 경로 + 성공 기준** 명시
+6. 각 Wave에 에이전트별 **파일 경로 + 성공 기준** 명시
+7. `--design` 지정 시: **프론트엔드 파일 담당 에이전트에 디자인 규칙을 지시서에 포함**
 
 **사용자 확인 없이** 다음 단계로 진행.
 
@@ -64,6 +74,32 @@ DISCOVER → PLAN → BUILD → CHECK → SHIP → DOCUMENT
 - 충돌 시 지휘자가 Edit으로 병합
 - 실패 시 SendMessage로 해당 에이전트 재지시 (최대 3회)
 
+#### --design 활성화 시 BUILD 추가 규칙
+
+`--design` 플래그가 있으면, 프론트엔드를 담당하는 모든 에이전트 지시서에 아래를 추가한다:
+
+**1. 디자인 스킬 활성화:**
+- `--design soft` → soft-skill 규칙 적용
+- `--design minimal` → minimalist-skill 규칙 적용
+- `--design brutal` → brutalist-skill 규칙 적용
+- `--design` 또는 `--design v{N}m{N}d{N}` → taste-skill (다이얼 값 전달)
+
+**2. 에이전트 지시서에 포함할 디자인 컨텍스트:**
+```
+디자인 규칙: {프리셋명} 모드 활성화.
+참조 파일: design.md (프로젝트 루트 또는 docs/)
+다이얼: VARIANCE={V}, MOTION={M}, DENSITY={D}
+필수 준수:
+- design.md에 정의된 컬러, 타이포, 컴포넌트 규칙 따를 것
+- /design 커맨드의 공통 금지 패턴 (AI Tells) 위반 금지
+- Inter 폰트 금지 → Geist, Outfit, Cabinet Grotesk, Satoshi
+- 악센트 1개, 채도 < 80%, 베이스 Zinc/Slate
+- 768px 미만 단일 컬럼 붕괴
+- Loading/Empty/Error/Tactile 상태 필수
+```
+
+**3. 백엔드 전용 에이전트는 디자인 규칙 불필요** — 프론트엔드 파일(.tsx, .jsx, .css, .html)을 담당하는 에이전트에만 적용.
+
 ---
 
 ### [4] CHECK — /check 패턴으로 리뷰 + 검증
@@ -74,6 +110,21 @@ DISCOVER → PLAN → BUILD → CHECK → SHIP → DOCUMENT
 - 5개 에이전트 동시 리뷰 (품질/간결화/무음실패/타입/보안)
 - CRITICAL/HIGH 자동 수정 → 빌드/린트/테스트 검증
 - 3회 실패 시 중단 + 상세 보고
+
+#### --design 활성화 시 CHECK 추가 규칙
+
+5-angle 코드 리뷰에 **6번째 앵글: 디자인 품질**을 추가한다:
+
+| 체크 항목 | 확인 내용 |
+|-----------|----------|
+| AI Tells | Inter 폰트, 순수 #000000, 네온 글로우, 3-column 균등 카드, 제네릭 이름 |
+| design.md 준수 | 컬러 팔레트, 타이포 스케일, 컴포넌트 규칙이 design.md와 일치하는지 |
+| 다이얼 일관성 | VARIANCE/MOTION/DENSITY 값에 맞는 레이아웃/애니메이션/밀도인지 |
+| 반응형 | 768px 미만 단일 컬럼 붕괴, 가로 스크롤 없음 |
+| 인터랙티브 상태 | Loading/Empty/Error/Tactile 4종 존재 여부 |
+| 접근성 | 포커스 링, 시맨틱 HTML, 터치 타겟 44px+ |
+
+CRITICAL/HIGH 디자인 이슈도 자동 수정 대상에 포함.
 
 ---
 
@@ -88,9 +139,9 @@ git add <변경 파일> → git commit -m "<type>: <desc>" → git push origin <
 
 ### [6] DOCUMENT — 문서 자동 갱신
 
-| 작업 | 스킬 | 산출물 |
-|------|------|--------|
-| 릴리즈 노트 | `release-notes` | 커밋 기반 카테고리별 변경 요약 |
+| 작업 | 커맨드 | 산출물 |
+|------|--------|--------|
+| 릴리즈 노트 | `/sprint` (release-notes) | 커밋 기반 카테고리별 변경 요약 |
 | CLAUDE.md 갱신 | `/revise-claude-md` | 세션 학습 사항 반영 |
 | 문서 동기화 | `/sync-docs` | prompt_plan.md, spec.md 갱신 |
 
@@ -105,4 +156,7 @@ git add <변경 파일> → git commit -m "<type>: <desc>" → git push origin <
 /super 로그인에 2FA 추가
 /super --pr 결제 모듈 리팩토링
 /super --skip-discover PRD가 이미 있으니 Plan부터
+/super --design soft 기획서와 design.md를 읽고 서비스 전체 구현
+/super --skip-discover --design minimal 기획서 있음, 미니멀 스타일로 구현
+/super --design v2m3d9 --pr 관리자 대시보드 구현 후 PR까지
 ```
