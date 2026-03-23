@@ -161,11 +161,11 @@ With `--pr`: `gh pr create --title "<title>" --body "## Summary\n<change summary
 
 ### [6] DOCUMENT — Auto-Update Documentation
 
-| Task | Command | Output |
-|------|---------|--------|
-| Release notes | `/sprint` (release-notes) | Commit-based categorized change summary |
-| CLAUDE.md update | `/revise-claude-md` | Reflect session learnings |
-| Doc sync | `/sync-docs` | Update prompt_plan.md, spec.md |
+| Task | Method | Output |
+|------|--------|--------|
+| Release notes | `/sprint` (release-notes) if available, otherwise summarize git log | Commit-based categorized change summary |
+| Project docs | Update README, CLAUDE.md, or relevant docs affected by the change | Reflect what changed and why |
+| API docs | Update API references if endpoints/schemas changed | Keep docs in sync with code |
 
 ---
 

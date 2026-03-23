@@ -33,7 +33,17 @@ CRITICAL/HIGH → Fix with Edit tool. MEDIUM → Report only. LOW → Ignore.
 Fix scope: affected lines only. Do not touch surrounding code (surgical changes principle).
 
 ### 4. Verify
-`pnpm build` → `pnpm lint` → `pnpm test` (skip if unavailable).
+Detect the project's build system and run verification commands in order:
+
+```
+package.json → npm/yarn/pnpm/bun (scripts: build, lint, test)
+Makefile     → make build, make lint, make test
+Cargo.toml   → cargo build, cargo clippy, cargo test
+go.mod       → go build ./..., go vet ./..., go test ./...
+pyproject.toml → ruff check, pytest
+```
+
+Skip any step if the command or config is not present.
 On failure: auto-fix → re-verify (max 3 attempts). 3 failures → abort.
 
 ### 5. Deploy
