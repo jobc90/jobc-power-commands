@@ -33,22 +33,33 @@ If the user invokes `$cowork`, treat that as explicit permission for subagent-ba
 
 Inspect the repository and map:
 
-- Relevant modules and entry points
-- Existing conventions and boundaries
-- Shared files that could become contention points
-- Verification commands that will prove the finished change
+- relevant modules and entry points
+- existing conventions and boundaries
+- shared files that could become contention points
+- verification commands that will prove the finished change
 
 ### Phase 2. Plan
 
-Turn the request into explicit success criteria, then decompose the work into waves:
+Turn the request into explicit success criteria, then pick the lightest planning route that fits the work.
 
-- Wave 1: shared contracts, schema, or utility changes
+| Task shape | PM skill route | Result |
+|-----------|----------------|--------|
+| 3+ file new feature | `create-prd` -> `user-stories` | scope and story breakdown |
+| Refactor | `user-stories` | task slices and acceptance criteria |
+| Bug bundle or regression-heavy change | `test-scenarios` | failure paths and regression cases |
+| High-risk or ambiguous work | `pre-mortem` | risk list before slicing |
+
+Then decompose the work into waves:
+
+- Wave 1: shared contracts, schema, utility, or cross-cutting setup
 - Wave 2: independent feature slices that can run in parallel
 - Wave 3: final integration, cleanup, and regression checks
 
-For each slice, define:
+For each slice, define these fields explicitly:
 
-- Exact files or directories owned
+- Slice name
+- Owned files or directories
+- Dependencies on earlier slices
 - Success criteria
 - Verification command
 - Forbidden edits outside the owned slice
@@ -57,12 +68,22 @@ If the task is too coupled for safe parallelism, say so and fall back to a singl
 
 ### Phase 3. Dispatch
 
-When subagents are allowed, dispatch workers with:
+When subagents are allowed, dispatch workers with a concrete ownership template:
 
-- Ownership boundaries
-- The relevant context only
-- A reminder that they are not alone in the codebase
-- A warning not to revert other edits
+```text
+Role: {worker role}
+Context: {short recon summary}
+Owned files: {exact paths}
+Goal: {what this slice must achieve}
+Success criteria:
+- {criterion 1}
+- {criterion 2}
+Verify with: {command}
+Do not:
+- edit files outside ownership
+- revert others' changes
+- add unapproved dependencies
+```
 
 Use a small number of workers. Prefer 2-4 well-scoped tasks over many shallow tasks.
 
@@ -70,17 +91,17 @@ Use a small number of workers. Prefer 2-4 well-scoped tasks over many shallow ta
 
 Review returned diffs before merging ideas together:
 
-- Check for overlap and hidden coupling
-- Resolve imports, type contracts, and shared interface drift
-- Add any missing glue code locally
+- check for overlap and hidden coupling
+- resolve imports, type contracts, and shared interface drift
+- add any missing glue code locally
 
 ### Phase 5. Verify
 
 Run the real verification commands for the full change:
 
-- Focused tests
-- Broader tests, lint, and build as needed
-- Repeat repair and re-verify up to 3 times
+- focused tests
+- broader tests, lint, and build as needed
+- repeat repair and re-verify up to 3 times
 
 If the parallel plan is breaking down, stop forcing concurrency and finish the remaining work locally.
 
@@ -88,9 +109,19 @@ If the parallel plan is breaking down, stop forcing concurrency and finish the r
 
 If subagents are unavailable or not explicitly requested:
 
-- Keep the same wave structure
-- Execute the slices in order in the current session
-- Preserve ownership boundaries mentally so the change does not sprawl
+- keep the same wave structure
+- execute the slices in order in the current session
+- preserve ownership boundaries mentally so the change does not sprawl
+
+## Output Shape
+
+Use this structure when reporting:
+
+1. Recon: what was mapped
+2. Plan: selected route and wave structure
+3. Dispatch: slices and ownership
+4. Integration: conflicts or glue resolved
+5. Verification: commands run and outcomes
 
 ## Red Flags
 

@@ -3,9 +3,11 @@ name: docs
 description: Use when Codex needs to create, update, summarize, or improve documentation such as PRDs, READMEs, architecture docs, release notes, runbooks, meeting notes, interview summaries, or project-wide documentation from code and existing source material.
 ---
 
-# Docs — Systematic Documentation Pipeline
+# Docs
 
-Run a documentation-first workflow for Codex. Detect the document type, gather only the source material needed, draft with the right structure, and review for accuracy before delivering the final document.
+## Overview
+
+Run the Codex version of `/docs`. Detect the document type, gather only the needed source material, draft with the right structure, and review from grammar, accuracy, and completeness before delivering the final document.
 
 ## Input Modes
 
@@ -21,35 +23,33 @@ If the user asks for documentation work without the token, this skill still appl
 
 ## Pipeline
 
-```
-DETECT → RESEARCH → STRUCTURE → DRAFT → REVIEW → DELIVER
-```
+`DETECT -> RESEARCH -> STRUCTURE -> DRAFT -> REVIEW -> DELIVER`
 
-## Phase 1: DETECT
+## Phase 1. DETECT
 
-Classify the document type from user input and the available source material.
+Classify the document type from user input and available source material.
 
-| Type | Triggers | Primary Skills |
-|------|----------|---------------|
-| PRD | "plan", "feature", "requirements" | create-prd, user-stories, test-scenarios |
-| Technical | "architecture", "API", "design" | code search, focused file reads |
-| README | "README", "getting started" | code search, focused file reads |
-| Release Notes | "release", "changelog" | release-notes, git log |
-| Meeting Notes | "meeting", "transcript" | summarize-meeting |
-| Interview | "interview", "user research" | summarize-interview |
-| Strategy | "strategy", "vision", "GTM" | product-strategy, gtm-strategy |
-| Operations | "runbook", "deploy guide" | code search, focused file reads |
-| Full Project | "document everything" | all of the above |
-| Proofread | "review", "improve", existing .md | grammar-check |
+| Type | Triggers | Skill route | Output |
+|------|----------|-------------|--------|
+| PRD | plan, feature, requirements | `create-prd`, `user-stories`, `test-scenarios` | `PRD-{name}.md` |
+| Technical doc | architecture, API, design | focused repo reads | `docs/{name}.md` |
+| README | README, install, getting started | focused repo reads | `README.md` |
+| Release notes | release, changelog, shipped | `release-notes` + git history | `RELEASE-{version}.md` |
+| Meeting summary | meeting, transcript | `summarize-meeting` | `Meeting-{date}-{topic}.md` |
+| Interview summary | interview, user research | `summarize-interview` | `Interview-{date}-{subject}.md` |
+| Strategy doc | strategy, GTM, vision | `product-strategy`, `gtm-strategy` | `Strategy-{name}.md` |
+| Runbook | runbook, deploy guide, operations | focused repo reads | `docs/RUNBOOK.md` |
+| Project-wide docs | document everything | mixed route | `docs/` set |
+| Proofread | improve, polish, review existing doc | `grammar-check` | patch existing file |
 
-## Phase 2: RESEARCH
+## Phase 2. RESEARCH
 
 Gather source material with the lightest tools that preserve accuracy.
 
 - For pure writing, rewriting, summarization, or transcript work, avoid shell by default.
-- Use shell only when needed to discover files, inspect git history, or verify facts from the repository.
-- For code-based docs, collect exact paths, commands, and facts from the repo before writing prose.
-- For user-provided text, summarize from the provided material first instead of searching the repo unnecessarily.
+- Use shell only when needed to discover files, inspect git history, or verify facts from the repo.
+- For code-based docs, collect exact paths, commands, and behavior from the source before writing prose.
+- For user-provided text, summarize from the provided material first.
 
 Parallel research is appropriate when the sources are independent, for example:
 
@@ -58,64 +58,140 @@ Parallel research is appropriate when the sources are independent, for example:
 - existing docs
 - transcript or note files
 
-Rule: Extract only confirmed facts. Mark unknowns as `[TODO]`.
+Rule:
 
-## Phase 3: STRUCTURE
+- extract only confirmed facts
+- mark unknowns as `[TODO: 확인 필요]`
 
-Select template based on detected type. Apply PM skill templates when available.
+## Phase 3. STRUCTURE
+
+Select the template or skill output shape that fits the detected type.
 
 Principles:
-- Conclusion first, details second
-- Background/purpose before implementation
-- Action items in tables (Owner | Deadline | Status)
-- Keep the output proportional to the request. Do not turn a small README fix into a full documentation suite.
 
-## Phase 4: DRAFT
+- conclusion first, details second
+- background or purpose before implementation detail
+- action items in tables
+- keep the output proportional to the request
 
-- PM skill available -> invoke the matching installed skill
-- Code-based -> write directly using structured templates
-- Full project -> generate files sequentially only if the user asked for project-wide documentation
+### Built-in templates
 
-Prefer these skill routes:
+#### README
+
+```markdown
+# {project-name}
+> {one-line summary}
+
+## Overview
+## Tech Stack
+## Getting Started
+## Project Structure
+## Scripts
+## Environment Variables
+## Contributing
+```
+
+#### Technical document
+
+```markdown
+# {document-title}
+> Date: {date}
+
+## Background
+## Current State
+## Architecture
+## Key Decisions
+## Implementation Details
+## Constraints and Caveats
+## References
+```
+
+#### RUNBOOK
+
+```markdown
+# {service-name} Runbook
+
+## Service Overview
+## Infrastructure
+## Deployment Procedure
+## Monitoring and Alerts
+## Incident Response
+## Rollback
+## Contacts
+```
+
+#### Project-wide docs set
+
+```text
+docs/
+├── README.md
+├── architecture.md
+├── api-reference.md
+└── RUNBOOK.md
+```
+
+If `--dry-run` is present, stop here and report the planned structure and file outputs.
+
+## Phase 4. DRAFT
+
+Prefer these skill routes when they apply:
 
 - PRD -> `create-prd`
 - user stories -> `user-stories`
-- test coverage or QA appendix -> `test-scenarios`
+- test appendix or QA framing -> `test-scenarios`
 - release notes -> `release-notes`
 - meeting summaries -> `summarize-meeting`
 - interview summaries -> `summarize-interview`
 - strategy docs -> `product-strategy` or `gtm-strategy`
 - proofreading -> `grammar-check`
 
-## Phase 5: REVIEW
+For code-based docs, write directly from confirmed repo facts and the templates above.
 
-Three parallel checks:
-1. **Grammar/readability** — grammar-check pattern
-2. **Accuracy** — verify paths, versions, API specs against source code
-3. **Completeness** — check all template sections filled, no orphan TODOs
+For project-wide documentation, generate files sequentially only if the user actually asked for full documentation coverage.
 
-Auto-fix grammar and factual errors. Report judgment calls.
+## Phase 5. REVIEW
 
-## Phase 6: DELIVER
+Review from 3 angles before delivery.
 
-- Respect `--dry-run`: show the structure and planned outputs, but do not write files.
-- When updating an existing document, preserve useful content and patch only what the request justifies.
+| Angle | Goal | Checklist |
+|------|------|-----------|
+| Grammar and readability | clear writing | grammar, flow, ambiguity, repetition, awkward phrasing |
+| Accuracy | factual correctness | paths exist, commands match repo, versions are real, APIs and behavior align with source |
+| Completeness | document usefulness | required sections present, no orphan TODOs, no empty headings, next steps are explicit when needed |
+
+### Review checklist
+
+1. Grammar issues fixed
+2. Inconsistent terminology removed
+3. File paths verified
+4. Commands verified
+5. Versions or environment facts verified
+6. Source-backed claims distinguished from assumptions
+7. Missing sections added
+8. Empty sections removed or marked with `[TODO: 확인 필요]`
+9. Language matches requested output language
+
+Auto-fix grammar and factual errors when the source is clear. Report judgment calls instead of inventing facts.
+
+## Phase 6. DELIVER
+
+- Respect `--dry-run`: show structure only, do not write files.
+- When updating an existing doc, patch only what the request justifies.
 - When the user asked for language, produce the document in that language.
 
-Save files and report a concise summary:
-```
-[DOCS] Complete
-├── Type: {detected type}
-├── Created: {new files}
-├── Updated: {modified files}
-├── Review: {fixes applied}
-└── Next: {recommended actions}
-```
+Use this final reporting shape:
+
+1. Type: detected document type
+2. Sources: what was used as the source of truth
+3. Created: new files
+4. Updated: changed files
+5. Review: grammar, accuracy, completeness fixes
+6. Next: recommended follow-up if any TODOs remain
 
 ## Red Flags
 
-- Making up repository facts not confirmed from code, git, or provided text
+- Making up facts not confirmed from code, git, or provided text
 - Using stale docs as the only source of truth when code disagrees
 - Overusing shell on pure document tasks
 - Rewriting an entire document when a targeted update is enough
-- Leaving unresolved placeholders without explicitly marking them as `[TODO]`
+- Leaving unresolved placeholders without explicitly marking them as `[TODO: 확인 필요]`

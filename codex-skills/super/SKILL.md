@@ -7,7 +7,7 @@ description: Use when the user wants an idea, feature request, or large change c
 
 ## Overview
 
-Run the Codex version of `/super`. This is the end-to-end orchestrator that routes a request through design, planning, implementation, review, verification, and release-ready handoff while respecting Codex's safety and git rules.
+Run the Codex version of `/super`. This is the end-to-end orchestrator that routes a request through discovery, planning, build, review, shipping, and documentation while preserving Codex's stricter git and verification rules.
 
 ## Input Modes
 
@@ -19,7 +19,7 @@ Treat these literal tokens in the user's prompt as workflow hints:
 - `$super --push`
 - `$super --pr`
 
-If the user gives a raw feature request that clearly means "take this from idea to done", this skill also applies even without the literal token.
+If the user gives a raw feature request that clearly means "take this from idea to done", this skill still applies even without the literal token.
 
 ## Pipeline
 
@@ -31,39 +31,66 @@ If the user gives a raw feature request that clearly means "take this from idea 
 
 Clarify the goal, scope, constraints, and success criteria.
 
-- For new features or behavior changes, route through the existing design discipline first.
-- Use a short design when the task is small.
-- Use a fuller spec or PM skill when the task is large, ambiguous, or product-heavy.
+Use this routing table to decide the initial documentation or PM artifact:
+
+| Condition | Skill route | Output |
+|----------|-------------|--------|
+| New feature, likely 3+ files | `create-prd` | PRD-style scope document |
+| Existing feature improvement, likely 1-2 files | `user-stories` | concise story and acceptance criteria |
+| High-risk change | `pre-mortem` | risk framing before planning |
+| Strategic or product-direction decision | `product-strategy` | strategy framing |
+| Competitor or market framing needed | `competitor-analysis` | comparison and differentiation notes |
+| Monetization or packaging question | `pricing-strategy` | pricing tradeoffs and implications |
+
+Gate:
+
+- If requirements are still too ambiguous to verify later, do not leave DISCOVER yet.
 - If `--skip-discover` is present and requirements already exist, start from PLAN.
 
 ### 2. PLAN
 
 Produce a concrete execution plan before touching code:
 
-- Files likely to change
-- Verification strategy
-- Risk areas
-- Whether the work is sequential or parallelizable
+- files likely to change
+- verification strategy
+- risk areas
+- whether the work is sequential or parallelizable
 
-Use the smallest planning artifact that still makes execution reliable.
+For larger implementation work, break the plan into waves:
+
+- Wave 1: shared contracts, types, utilities
+- Wave 2: independent implementation slices
+- Wave 3: integration and cleanup
+
+Gate:
+
+- If the work cannot be decomposed safely, plan for local sequential execution instead of forced delegation.
 
 ### 3. BUILD
 
 Choose the implementation mode that fits the task:
 
-- Small or tightly coupled work: implement locally
-- Larger work with clean ownership boundaries: use the `$cowork` style delegation flow when the user explicitly asked for it
+- small or tightly coupled work -> implement locally
+- larger work with clean ownership boundaries and explicit delegation permission -> use the `$cowork` workflow
 
-Do not force subagents into work that is too coupled or too small to benefit.
+Gate:
+
+- Do not dispatch subagents unless the user explicitly asked for delegation or used `$cowork`/`$super` in that way.
+- Do not move to CHECK until the requested behavior is implemented and locally integrated.
 
 ### 4. CHECK
 
 Run the `$check` workflow on the resulting diff:
 
-- Review
-- Safe fixes
-- Verification
-- Report any remaining recommendations
+- review
+- safe fixes
+- verification
+- remaining recommendations
+
+Gate:
+
+- Do not move to SHIP until verification evidence exists.
+- If verification fails 3 times, stop and report instead of pushing forward.
 
 ### 5. SHIP
 
@@ -77,38 +104,40 @@ Without an explicit shipping flag or explicit user instruction, stop at a verifi
 
 ### 6. DOCUMENT
 
-Update only the docs that are directly affected by the change:
+Update only the docs directly affected by the change:
 
-- Plan or design notes created during the task
-- Small developer-facing docs that would otherwise become stale
-- Release-note style summary if the user asked for it
+- release-note style summary if requested
+- plan or design notes created during the task
+- small developer-facing docs that would otherwise become stale
 
-Do not invent documentation work that the request does not justify.
+If the user wants a fuller doc pass, route into `$docs`.
 
-## Decision Rules
+## Codex-Native Routing
 
-- Prefer existing installed process skills instead of re-inventing them.
-- Prefer the simplest complete path over the flashiest path.
-- Stop for critical security issues or repeated verification failure.
-- If reality changes, re-plan instead of pushing through the stale plan.
+Inside this workflow, prefer real installed skills and workflows:
 
-## Recommended Skill Routing
+- Discovery and PM framing -> `create-prd`, `user-stories`, `pre-mortem`, `product-strategy`, `competitor-analysis`, `pricing-strategy`
+- Parallel build -> `$cowork`
+- Review and verification -> `$check`
+- Full documentation pass -> `$docs`
 
-Use these as the default building blocks inside the workflow:
+## Output Shape
 
-- Discovery: `superpower`, `brainstorming`, relevant PM skill if needed
-- Planning: `writing-plans`
-- Implementation: local execution or `subagent-driven-development` style slices
-- Review: `requesting-code-review` and `$check`
-- Verification: `verification-before-completion`
-- Completion: `finishing-a-development-branch` when the user wants git integration options
+Use this structure when reporting:
+
+1. Discover: selected route and requirements state
+2. Plan: execution shape and risks
+3. Build: local or delegated implementation path
+4. Check: review and verification outcome
+5. Ship: git action taken, or next safe step
+6. Document: docs updated or deferred
 
 ## Red Flags
 
 - Starting implementation before the request is clear enough to verify
 - Carrying out irreversible git actions without explicit instruction
 - Letting "end-to-end" become an excuse for broad unrelated refactors
-- Claiming the full pipeline is done without fresh evidence from the real verification commands
+- Claiming the full pipeline is done without fresh evidence from real verification commands
 
 ## Quick Prompts
 

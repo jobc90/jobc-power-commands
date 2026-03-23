@@ -7,7 +7,7 @@ description: Use when implementation is already in progress or finished and Code
 
 ## Overview
 
-Run a Codex-native finish pass for the current diff. This is the port of `/check`, adapted for Codex's stricter verification rules and safer git behavior.
+Run the Codex version of `/check`. This keeps the Claude workflow shape, but replaces Claude-only named reviewer agents with a built-in 5-angle review checklist, keeps git actions opt-in, and requires fresh verification evidence before any ship claim.
 
 ## Input Modes
 
@@ -19,58 +19,90 @@ Treat these literal tokens in the user's prompt as workflow hints:
 - `$check --push`
 - `$check --pr`
 
-If no token is present but the request clearly means "review the current changes before I ship them", this skill still applies.
+If no token is present but the request clearly means "review the current changes before shipping", this skill still applies.
 
 ## Core Rules
 
-- Review the actual diff first. Do not comment on files that are unchanged.
-- Fix only issues you can defend with concrete evidence. Do not churn style-only code unless the user asked.
+- Review the real diff first. Do not spend time on unchanged files.
+- Fix only issues you can defend with evidence.
 - Keep edits surgical and inside the existing change scope.
-- Do not commit, push, or open a PR unless the user explicitly requested that action in the current prompt.
+- Do not commit, push, or open a PR unless the user explicitly requested that action.
 - Do not claim success without fresh verification output.
 
 ## Workflow
 
 ### 1. Identify the target diff
 
-Collect the current change set with git status and diff commands. Include staged and unstaged changes.
+Collect staged and unstaged changes with git status and diff commands.
 
 If there is no diff:
 
 - Report that there is nothing to review.
 - Stop without touching git history.
 
-### 2. Run the review pass
+### 2. Run the 5-angle review
 
-Start with a local review in Codex's normal code-review mode:
+Codex does not have the same named Claude reviewer agents, so internalize the review as 5 explicit angles.
 
-- Bugs and regressions
-- Missing or weak tests
-- Silent failures and error handling gaps
-- Type safety issues
+| Angle | Goal | Checks |
+|------|------|--------|
+| Quality | Keep code maintainable and coherent | naming, duplication, complexity, error handling, boundary clarity |
+| Simplification | Remove needless weight | unnecessary abstraction, one-off indirection, dead branches, over-configuration, simpler alternative |
+| Silent Failure | Catch hidden breakage | swallowed exceptions, ignored return values, missing awaits, unchecked nullish paths, skipped failure states |
+| Type Design | Tighten correctness contracts | unsafe `any`, unsafe casts, missing generics, weak unions, mismatch between runtime and types |
+| Security | Block risky behavior | secrets, injection, auth gaps, trust-boundary mistakes, unsafe file or network handling |
+
+### 3. Use the 5-angle checklist
+
+Run this checklist against the changed files. The items intentionally mirror the Claude review angles.
+
+| Angle | Checklist |
+|------|-----------|
+| Quality | 1. Naming matches intent  2. No duplicated logic introduced  3. Control flow stays readable  4. Error handling is explicit  5. Tests cover the changed behavior |
+| Simplification | 6. No unnecessary abstraction added  7. No optionality without a real use case  8. New helper count is justified  9. Existing code path could not stay simpler  10. No broad refactor hidden inside the fix |
+| Silent Failure | 11. No empty catch or silent rescue  12. No ignored async or Promise result  13. No unchecked parse/IO/network failure  14. No hidden fallback that masks bad state  15. Failure path is testable or reported |
+| Type Design | 16. No unnecessary `any`  17. No unsafe cast without runtime guard  18. Interfaces match actual data shape  19. Nullable paths are handled deliberately  20. Public contracts stay consistent |
+| Security | 21. No hardcoded secrets  22. No injection vector added  23. Authz/authn assumptions are explicit  24. External input is validated at boundaries  25. Sensitive data is not leaked to logs or output |
+
+### 4. Severity classification
+
+Use this severity table when deciding what to change now.
+
+| Severity | Meaning | Action |
+|---------|---------|--------|
+| Critical | Security issue, data corruption risk, or guaranteed production break | Stop and report immediately. Fix only if the path is clear and safe. |
+| High | Likely bug, regression, or correctness hole | Fix now and verify. |
+| Medium | Real quality issue but not release-blocking | Report by default. Fix only if narrowly scoped. |
+| Low | Minor cleanup or preference | Usually report only. |
+
+### 5. Apply safe fixes
+
+Fix issues that clearly deserve action now:
+
+- Critical issues when the remediation is safe and obvious
+- High-confidence correctness issues
 - Security problems
-- Simpler alternatives when the current code is overbuilt
+- Straightforward reliability or type-safety fixes
+- Narrow tests required to prove the fix
 
-If the user explicitly asks for deep, parallel, or multi-agent review, it is valid to spawn reviewer agents with distinct angles. Keep them read-only reviewers. Do not delegate fixes to the reviewer agents.
+Do not silently widen scope to chase medium or low suggestions.
 
-### 3. Apply safe fixes
+### 6. Verify
 
-Fix issues that are clearly worth changing now:
+Detect verification commands in this order:
 
-- Critical and high-confidence correctness issues
-- Security problems
-- Straightforward reliability and type-safety fixes
-- Missing narrow tests needed to prove the fix
+1. Project or package-specific focused test command for the changed area
+2. Narrow lint/typecheck command for the touched package or app
+3. Broader repo-level lint or build
+4. Broader test suite
 
-Report medium or low-priority suggestions instead of silently broadening scope.
+Use the narrowest command that proves the fix first, then expand only as needed.
 
-### 4. Verify
+If verification fails:
 
-Run the narrowest commands that prove the edited code is correct:
-
-- Focused test first
-- Then broader test, lint, or build commands if relevant and available
-- Repeat fix and verify up to 3 times if verification fails
+- Fix the issue
+- Re-run the relevant command
+- Repeat up to 3 loops
 
 If verification still fails after 3 loops, stop and report the failure evidence.
 
@@ -85,7 +117,7 @@ If verification still fails after 3 loops, stop and report the failure evidence.
 ### Default
 
 - Review, fix, and verify
-- Stop after reporting the verified state and suggested next git command
+- Stop after reporting the verified state and the next safe git step
 
 ### `--commit`
 
@@ -100,7 +132,7 @@ If verification still fails after 3 loops, stop and report the failure evidence.
 ### `--pr`
 
 - Commit and push only after verification
-- Create a PR only if the repository is connected to GitHub CLI and the user asked for it
+- Create a PR only if GitHub CLI is available and the user asked for it
 
 ## Stop Conditions
 
@@ -111,15 +143,15 @@ Stop immediately and report if any of these appear:
 - Verification failure after 3 repair loops
 - Dirty unrelated worktree state that makes automatic git actions risky
 
-## Good Output Shape
+## Output Shape
 
-When reporting back, keep it concise:
+Use this shape for final reporting:
 
-1. What was reviewed
-2. Findings fixed
-3. Findings left as recommendations
-4. Verification commands and results
-5. Git action taken, or the next safe git step
+1. Reviewed: files or diff scope
+2. Fixed: issues resolved now
+3. Recommended: medium or low findings left as follow-up
+4. Verified: commands run and outcomes
+5. Git: action taken, or next safe step
 
 ## Quick Prompts
 
