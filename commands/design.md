@@ -78,35 +78,69 @@ taste-skill 생태계를 통합 진입점 하나로 활용한다.
 
 `--output-guard` 지정 시 output-skill을 **병행 활성화** — 코드 생략/placeholder 패턴 차단.
 
-### 3. 공통 금지 패턴 (모든 모드)
+### 3. 기본 디자인 규칙 (모든 모드)
 
-어떤 프리셋을 쓰든 아래는 절대 금지:
+taste-skill이 설치되면 상세 규칙은 해당 스킬이 제공한다.
+아래는 taste-skill 유무와 관계없이 항상 적용되는 기본 규칙이다.
 
-**시각/CSS:**
-- 네온/외부 글로우, 순수 `#000000`, 과채도 악센트, 그라디언트 텍스트 남용, 커스텀 마우스 커서
-- "AI 퍼플/블루" 미학 — 보라 버튼 글로우, 네온 그라디언트 금지
+#### 타이포그래피
 
-**타이포그래피:**
-- Inter 폰트 (프리미엄/크리에이티브 맥락), 과대 H1, 대시보드에 세리프
+**권장 폰트** (Inter, Roboto, Arial, Open Sans 금지):
+- Display/Headlines: `Geist`, `Outfit`, `Cabinet Grotesk`, `Satoshi`
+- Body: 기존 프로젝트 폰트 또는 위 목록에서 선택
+- Monospace: `Geist Mono`, `JetBrains Mono`
+- 세리프: 크리에이티브/에디토리얼 전용. 대시보드/소프트웨어 UI에서는 금지
 
-**레이아웃:**
-- 3-column 균등 카드, `h-screen` (→ `min-h-[100dvh]`), 복잡한 flexbox calc (→ CSS Grid)
+**타이포 스케일:**
+- Display: `text-4xl md:text-6xl tracking-tighter leading-none`
+- Body: `text-base text-gray-600 leading-relaxed max-w-[65ch]`
+- 순수 `#000000` 금지 → off-black (`#111111`, `zinc-950`)
+
+#### 컬러
+
+- 악센트 컬러 **최대 1개**, 채도 80% 미만
+- 베이스: Zinc 또는 Slate 계열 중성색
+- "AI 퍼플/블루" 금지 — 보라 버튼 글로우, 네온 그라디언트 금지
+- 프로젝트 내 warm/cool gray 혼용 금지 — 하나로 통일
+
+#### 레이아웃
+
+- 3-column 균등 카드 금지 → 2-column 지그재그, 비대칭 그리드, 수평 스크롤
+- `h-screen` 금지 → `min-h-[100dvh]` (iOS Safari 뷰포트 점프 방지)
+- 복잡한 flexbox calc 금지 → CSS Grid
 - VARIANCE > 4일 때 중앙 정렬 Hero 금지
+- DENSITY > 7일 때 카드 컨테이너 금지 → `border-t`, `divide-y`, 네거티브 스페이스로 그룹핑
 
-**콘텐츠:**
-- "John Doe", "Acme", "Nexus" 등 제네릭 이름
-- `99.99%`, `50%` 등 가짜 라운드 숫자 (→ `47.2%`, `+1 (312) 847-1928`)
-- "Elevate", "Seamless", "Unleash" 등 AI 클리셰
+#### 모션 기본값
 
-**기술:**
+- 전환: `transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`
+- Spring physics: `stiffness: 100, damping: 20`
+- Tactile feedback: `:active` 시 `-translate-y-[1px]` 또는 `scale-[0.98]`
 - `transform`과 `opacity`만 애니메이션. `top`, `left`, `width`, `height` 절대 금지
-- 깨진 Unsplash 링크 금지 → `picsum.photos/seed/{id}/800/600` 또는 SVG 아바타
-- shadcn/ui 기본 상태 그대로 사용 금지 — 반드시 커스터마이즈
+- MOTION > 5일 때 Framer Motion 사용 시 `useMotionValue`/`useTransform` (React useState 금지)
 
-**필수:**
-- 인터랙티브 상태 4종: Loading(스켈레톤), Empty, Error, Tactile Feedback
+#### 콘텐츠
+
+- "John Doe", "Acme", "Nexus" 등 제네릭 이름 금지
+- `99.99%`, `50%` 등 가짜 라운드 숫자 금지 → `47.2%`, `+1 (312) 847-1928`
+- "Elevate", "Seamless", "Unleash" 등 AI 클리셰 금지
+- 깨진 Unsplash 링크 금지 → `picsum.photos/seed/{id}/800/600` 또는 SVG 아바타
+
+#### 기술
+
+- shadcn/ui 기본 상태 금지 — radius, color, shadow 반드시 커스터마이즈
+- React/Next.js: Server Components 기본. 글로벌 상태는 `"use client"` 래퍼 안에서만
+- Tailwind: v3/v4 문법 차이 주의. 프로젝트 버전 확인 후 작성
+- 의존성 import 전 package.json 확인 — 미설치 패키지 import 금지
+- 이모지 전면 금지 — `@phosphor-icons/react` 또는 `@radix-ui/react-icons`
+
+#### 필수 상태
+
+- Loading: 레이아웃 크기에 맞춘 스켈레톤 로더 (원형 스피너 금지)
+- Empty: 구성된 빈 상태 화면
+- Error: 인라인 에러 리포팅
+- Tactile: `:active` 시 `-translate-y-[1px]` 또는 `scale-[0.98]`
 - 768px 미만 단일 컬럼 붕괴, 가로 스크롤 금지
-- 이모지 전면 금지 — Phosphor/Radix 아이콘 또는 SVG
 
 ### 4. redesign 모드 실행 순서
 

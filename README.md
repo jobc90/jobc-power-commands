@@ -313,7 +313,7 @@ jobc-power-commands/
 ├── commands/
 │   ├── check.md             # /check (42줄)
 │   ├── cowork.md            # /cowork (52줄)
-│   ├── design.md            # /design (145줄)
+│   ├── design.md            # /design (179줄)
 │   ├── docs.md              # /docs (202줄)
 │   └── super.md             # /super (108줄)
 ├── codex-skills/
@@ -329,6 +329,8 @@ jobc-power-commands/
 │   └── super/
 │       ├── SKILL.md
 │       └── agents/openai.yaml
+├── hooks/
+│   └── check-design-deps.sh # SessionStart: taste-skill 설치 여부 감지
 ├── rules/
 │   └── plugins-catalog.md   # 설치된 플러그인 카탈로그 (참조용)
 ├── README.md
