@@ -1,4 +1,4 @@
-# jobc-power-commands
+# claudex-power-commands
 
 [English](README.en.md) | **한국어**
 
@@ -326,13 +326,13 @@ DETECT → RESEARCH → STRUCTURE → DRAFT → REVIEW → DELIVER
 
 ```bash
 # 1. Clone
-git clone https://github.com/jobc90/jobc-power-commands.git
+git clone https://github.com/jobc90/claudex-power-commands.git
 
 # 2. 커맨드 복사
-cp jobc-power-commands/commands/*.md ~/.claude/commands/
+cp claudex-power-commands/commands/*.md ~/.claude/commands/
 
 # 3. (선택) 플러그인 카탈로그 규칙 복사
-cp jobc-power-commands/rules/*.md ~/.claude/rules/
+cp claudex-power-commands/rules/*.md ~/.claude/rules/
 
 # 4. 확인 — 새 세션에서
 #    /check, /cowork, /super, /docs, /design 이 슬래시 커맨드로 보이면 성공
@@ -342,17 +342,17 @@ cp jobc-power-commands/rules/*.md ~/.claude/rules/
 
 ```bash
 # 1. Clone
-git clone https://github.com/jobc90/jobc-power-commands.git
+git clone https://github.com/jobc90/claudex-power-commands.git
 
 # 2. Codex skill 디렉토리 생성
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 
 # 3. Codex skill 복사
-cp -R jobc-power-commands/codex-skills/check "${CODEX_HOME:-$HOME/.codex}/skills/"
-cp -R jobc-power-commands/codex-skills/cowork "${CODEX_HOME:-$HOME/.codex}/skills/"
-cp -R jobc-power-commands/codex-skills/super "${CODEX_HOME:-$HOME/.codex}/skills/"
-cp -R jobc-power-commands/codex-skills/docs "${CODEX_HOME:-$HOME/.codex}/skills/"
-cp -R jobc-power-commands/codex-skills/design "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R claudex-power-commands/codex-skills/check "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R claudex-power-commands/codex-skills/cowork "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R claudex-power-commands/codex-skills/super "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R claudex-power-commands/codex-skills/docs "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R claudex-power-commands/codex-skills/design "${CODEX_HOME:-$HOME/.codex}/skills/"
 
 # 4. 확인 — 새 Codex 세션에서
 #    $check, $cowork, $super, $docs, $design 를 명시하거나 관련 작업을 요청
@@ -397,7 +397,7 @@ rm -rf "${CODEX_HOME:-$HOME/.codex}"/skills/{check,cowork,super,docs,design}
 ### 업데이트
 
 ```bash
-cd jobc-power-commands && git pull
+cd claudex-power-commands && git pull
 
 # Claude Code
 cp commands/*.md ~/.claude/commands/
@@ -430,7 +430,7 @@ Codex 포트도 동일하게 자립형이다. `super`, `check` 등 핵심 스킬
 ## 파일 구조
 
 ```
-jobc-power-commands/
+claudex-power-commands/
 ├── .claude-plugin/
 │   └── plugin.json          # 플러그인 매니페스트
 ├── commands/

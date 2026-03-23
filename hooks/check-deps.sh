@@ -1,5 +1,5 @@
 #!/bin/bash
-# jobc-power-commands: SessionStart dependency checker
+# claudex-power-commands: SessionStart dependency checker
 # Checks for recommended plugins and prints install instructions for missing ones
 
 MISSING=()
@@ -45,7 +45,7 @@ if [ ${#MISSING[@]} -eq 0 ]; then
 fi
 
 echo ""
-echo "[jobc-power-commands] ${#MISSING[@]} recommended plugin(s) not installed:"
+echo "[claudex-power-commands] ${#MISSING[@]} recommended plugin(s) not installed:"
 echo ""
 
 for plugin in "${MISSING[@]}"; do

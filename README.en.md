@@ -1,4 +1,4 @@
-# jobc-power-commands
+# claudex-power-commands
 
 **English** | [한국어](README.md)
 
@@ -326,13 +326,13 @@ Auto-detects custom file names like `design.md`, `designsystem.md`, `BENEEDS_DES
 
 ```bash
 # 1. Clone
-git clone https://github.com/jobc90/jobc-power-commands.git
+git clone https://github.com/jobc90/claudex-power-commands.git
 
 # 2. Copy commands
-cp jobc-power-commands/commands/*.md ~/.claude/commands/
+cp claudex-power-commands/commands/*.md ~/.claude/commands/
 
 # 3. (Optional) Copy plugin catalog rules
-cp jobc-power-commands/rules/*.md ~/.claude/rules/
+cp claudex-power-commands/rules/*.md ~/.claude/rules/
 
 # 4. Verify — in a new session
 #    Success if /check, /cowork, /super, /docs, /design appear as slash commands
@@ -342,17 +342,17 @@ cp jobc-power-commands/rules/*.md ~/.claude/rules/
 
 ```bash
 # 1. Clone
-git clone https://github.com/jobc90/jobc-power-commands.git
+git clone https://github.com/jobc90/claudex-power-commands.git
 
 # 2. Create Codex skill directory
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 
 # 3. Copy Codex skills
-cp -R jobc-power-commands/codex-skills/check "${CODEX_HOME:-$HOME/.codex}/skills/"
-cp -R jobc-power-commands/codex-skills/cowork "${CODEX_HOME:-$HOME/.codex}/skills/"
-cp -R jobc-power-commands/codex-skills/super "${CODEX_HOME:-$HOME/.codex}/skills/"
-cp -R jobc-power-commands/codex-skills/docs "${CODEX_HOME:-$HOME/.codex}/skills/"
-cp -R jobc-power-commands/codex-skills/design "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R claudex-power-commands/codex-skills/check "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R claudex-power-commands/codex-skills/cowork "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R claudex-power-commands/codex-skills/super "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R claudex-power-commands/codex-skills/docs "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -R claudex-power-commands/codex-skills/design "${CODEX_HOME:-$HOME/.codex}/skills/"
 
 # 4. Verify — in a new Codex session
 #    Explicitly invoke $check, $cowork, $super, $docs, $design or request related tasks
@@ -397,7 +397,7 @@ rm -rf "${CODEX_HOME:-$HOME/.codex}"/skills/{check,cowork,super,docs,design}
 ### Updating
 
 ```bash
-cd jobc-power-commands && git pull
+cd claudex-power-commands && git pull
 
 # Claude Code
 cp commands/*.md ~/.claude/commands/
@@ -430,7 +430,7 @@ The Codex port is also self-contained. Core skills like `super` and `check` embe
 ## File Structure
 
 ```
-jobc-power-commands/
+claudex-power-commands/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin manifest
 ├── commands/

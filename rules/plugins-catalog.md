@@ -241,9 +241,9 @@
 
 ## D. 라우팅 가이드
 
-### jobc-power-commands vs 외부 플러그인 우선순위
+### claudex-power-commands vs 외부 플러그인 우선순위
 
-| 도메인 | jobc-power-commands | 외부 플러그인 | 규칙 |
+| 도메인 | claudex-power-commands | 외부 플러그인 | 규칙 |
 |--------|-------------------|-------------|------|
 | 코드 리뷰 + 배포 | `/check` | `/review-pr` (Official) | /check 우선 (검증+배포 포함) |
 | 병렬 오케스트레이션 | `/cowork` | — | 자체 전용 |
