@@ -21,7 +21,7 @@
     "SessionStart": [
       {
         "type": "command",
-        "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-design-deps.sh"
+        "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-deps.sh"
       }
     ]
   }

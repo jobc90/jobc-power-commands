@@ -365,7 +365,7 @@ jobc-power-commands/
 │       ├── SKILL.md
 │       └── agents/openai.yaml
 ├── hooks/
-│   └── check-design-deps.sh # SessionStart: taste-skill 설치 여부 감지
+│   └── check-deps.sh        # SessionStart: 권장 플러그인 4종 설치 여부 감지
 ├── rules/
 │   └── plugins-catalog.md   # 설치된 플러그인 카탈로그 (참조용)
 ├── README.md
