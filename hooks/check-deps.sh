@@ -45,17 +45,17 @@ if [ ${#MISSING[@]} -eq 0 ]; then
 fi
 
 echo ""
-echo "[jobc-power-commands] 권장 플러그인 ${#MISSING[@]}개가 설치되지 않았습니다:"
+echo "[jobc-power-commands] ${#MISSING[@]} recommended plugin(s) not installed:"
 echo ""
 
 for plugin in "${MISSING[@]}"; do
   case "$plugin" in
     taste-skill)
-      echo "  taste-skill (/design 프리셋 상세 규칙)"
+      echo "  taste-skill (detailed preset rules for /design)"
       echo "    claude plugin install --git https://github.com/Leonxlnx/taste-skill"
       ;;
     claude-plugins-official)
-      echo "  claude-plugins-official (/check 4-에이전트 리뷰, feature-dev)"
+      echo "  claude-plugins-official (4-agent review for /check, feature-dev)"
       echo "    claude plugin install --git https://github.com/anthropics/claude-plugins-official"
       ;;
     pm-skills)
@@ -66,5 +66,5 @@ for plugin in "${MISSING[@]}"; do
   echo ""
 done
 
-echo "  단독으로도 동작하지만, 위 플러그인이 있으면 더 강력합니다."
+echo "  Works standalone, but these plugins unlock full capabilities."
 echo ""

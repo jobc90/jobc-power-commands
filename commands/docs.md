@@ -1,206 +1,206 @@
 ---
-description: "문서 유형 자동 판별(PRD/README/릴리즈노트/회의록 등 10종) → 리서치 → 구조화 → 작성 → 3-angle 검수. PM 커맨드 자동 라우팅, --dry-run 지원."
+description: "Auto-detect document type (PRD/README/release notes/meeting notes, 10 types) → research → structure → draft → 3-angle review. PM command auto-routing, --dry-run supported."
 ---
 
-# /docs — 체계적 문서화 파이프라인
+# /docs — Systematic Documentation Pipeline
 
-어떤 문서 작업이든 자동으로 유형을 판별하고, 리서치 → 구조화 → 작성 → 검수까지 실행한다.
+For any documentation task, auto-detect the type, then execute research → structure → draft → review.
 
-## 인자
-- 첫 번째 인자: 문서 작업 설명 (필수)
-- `--type <TYPE>`: 문서 유형 강제 지정 (auto가 기본)
-- `--output <PATH>`: 출력 경로 지정 (기본: 프로젝트 루트 또는 docs/)
-- `--dry-run`: 구조만 잡고 실제 파일 생성 안 함
-- `--lang <ko|en>`: 출력 언어 (기본: ko)
+## Arguments
+- First argument: documentation task description (required)
+- `--type <TYPE>`: force document type (auto by default)
+- `--output <PATH>`: specify output path (default: project root or docs/)
+- `--dry-run`: outline structure only, do not create files
+- `--lang <ko|en>`: output language (default: ko)
 
-## 핵심 규칙
-1. 소스 오브 트루스(source of truth) 우선: 코드, git log, 기존 문서에서 사실만 추출
-2. 추측 금지: 확인 불가한 정보는 `[TODO: 확인 필요]`로 표시
-3. 문서 유형별 최적 커맨드를 자동 라우팅
-4. 최종 산출물은 반드시 grammar-check 통과
-
----
-
-## Phase 1: DETECT — 문서 유형 자동 판별
-
-사용자 입력 + 프로젝트 상태를 분석하여 문서 유형을 결정한다.
-
-### 판별 테이블
-
-| 유형 | 트리거 키워드/조건 | 활용 커맨드/도구 | 산출물 |
-|------|-------------------|-----------------|--------|
-| **PRD** | "기획", "PRD", "요구사항", "기능 정의", 신규 기능 | `/write-prd`, `/write-stories`, `/test-scenarios` | PRD-{name}.md |
-| **기술 문서** | "아키텍처", "API", "설계", "기술", 코드 변경 분석 | Explore + code-architect | docs/{name}.md |
-| **README** | "README", "시작하기", "설치", "온보딩" | Explore + 코드 분석 | README.md |
-| **릴리즈 노트** | "릴리즈", "배포", "변경사항", "changelog" | `/sprint` (release-notes) + git log | RELEASE-{version}.md |
-| **회의록** | "회의", "미팅", "회의록", 트랜스크립트 입력 | `/meeting-notes` (summarize-meeting) | Meeting-{date}-{topic}.md |
-| **인터뷰 요약** | "인터뷰", "사용자 조사", "고객 인터뷰" | `/interview` (summarize-interview) | Interview-{date}-{subject}.md |
-| **전략 문서** | "전략", "비전", "로드맵", "GTM" | `/strategy` (product-strategy, gtm-strategy) | Strategy-{name}.md |
-| **운영 문서** | "운영", "runbook", "배포 가이드", "모니터링" | Explore + 코드 분석 | docs/RUNBOOK.md |
-| **프로젝트 문서화** | "문서화", "정리", "현황 파악" | Explore + code-architect + 전체 스캔 | docs/ 디렉토리 일괄 |
-| **교정/개선** | "교정", "리뷰", "개선", 기존 .md 파일 지정 | `/proofread` (grammar-check) | 원본 파일 수정 |
-
-`--type`으로 강제 지정 가능. 자동 판별 시 결과를 사용자에게 1줄로 보고 후 진행.
+## Core Rules
+1. Source of truth first: extract facts only from code, git log, and existing documents
+2. No speculation: mark unverifiable information as `[TODO: needs confirmation]`
+3. Auto-route to the optimal command per document type
+4. Final output must pass grammar-check
 
 ---
 
-## Phase 2: RESEARCH — 소스 수집 (병렬)
+## Phase 1: DETECT — Auto-Detect Document Type
 
-문서 유형에 따라 리서치 에이전트를 **동시 호출**한다.
+Analyze user input + project state to determine document type.
 
-### 유형별 리서치 전략
+### Detection Table
 
-**코드 기반 문서** (기술 문서, README, 운영 문서, 프로젝트 문서화):
-| 에이전트 | 수집 대상 |
-|---------|----------|
-| **Explore** (quick) | 디렉토리 구조, 진입점, 프레임워크 |
-| **code-architect** (feature-dev) | 패턴, 컨벤션, 의존성, 데이터 흐름 |
-| **Bash** (git log) | 최근 변경사항, 커밋 히스토리, 기여자 |
+| Type | Trigger Keywords/Conditions | Commands/Tools Used | Output |
+|------|----------------------------|--------------------|---------|
+| **PRD** | "spec", "PRD", "requirements", "feature definition", new feature | `/write-prd`, `/write-stories`, `/test-scenarios` | PRD-{name}.md |
+| **Technical doc** | "architecture", "API", "design", "technical", code change analysis | Explore + code-architect | docs/{name}.md |
+| **README** | "README", "getting started", "install", "onboarding" | Explore + code analysis | README.md |
+| **Release notes** | "release", "deploy", "changelog" | `/sprint` (release-notes) + git log | RELEASE-{version}.md |
+| **Meeting notes** | "meeting", "minutes", transcript input | `/meeting-notes` (summarize-meeting) | Meeting-{date}-{topic}.md |
+| **Interview summary** | "interview", "user research", "customer interview" | `/interview` (summarize-interview) | Interview-{date}-{subject}.md |
+| **Strategy doc** | "strategy", "vision", "roadmap", "GTM" | `/strategy` (product-strategy, gtm-strategy) | Strategy-{name}.md |
+| **Operations doc** | "operations", "runbook", "deploy guide", "monitoring" | Explore + code analysis | docs/RUNBOOK.md |
+| **Project documentation** | "document", "organize", "audit" | Explore + code-architect + full scan | docs/ directory batch |
+| **Proofread/improve** | "proofread", "review", "improve", existing .md file specified | `/proofread` (grammar-check) | Original file modified |
 
-**기획 문서** (PRD, 전략):
-| 에이전트 | 수집 대상 |
-|---------|----------|
-| **Explore** (quick) | 기존 PRD/spec/CLAUDE.md 읽기 |
-| **Read** | 사용자 제공 자료 (트랜스크립트, 노트, URL) |
-
-**기존 문서 교정**:
-| 에이전트 | 수집 대상 |
-|---------|----------|
-| **Read** | 대상 문서 전체 |
-| **Explore** (quick) | 관련 코드 (문서 정확성 검증용) |
-
-리서치 결과를 **내부 컨텍스트**로 보관 (파일 저장 안 함).
+Override with `--type`. On auto-detection, report the result in one line then proceed.
 
 ---
 
-## Phase 3: STRUCTURE — 문서 골격 설계
+## Phase 2: RESEARCH — Gather Sources (Parallel)
 
-리서치 결과를 기반으로 문서 구조를 결정한다.
+Invoke research agents **simultaneously** based on document type.
 
-### 구조화 규칙
+### Research Strategy by Type
 
-1. **PM 스킬 활용 가능하면 스킬 우선**: create-prd, release-notes 등의 템플릿 그대로 적용
-2. **코드 기반 문서는 사실(fact)만**: 추측 배제, 코드에서 확인된 것만 기술
-3. **섹션 설계 원칙**:
-   - 결론/요약 → 상세 (결론 우선 원칙)
-   - 독자가 "왜?"를 먼저 이해하도록 배경/목적 선행
-   - 액션 아이템은 테이블 (Owner, Deadline, Status)
-4. **파일 네이밍 컨벤션**:
+**Code-based documents** (technical doc, README, operations doc, project documentation):
+| Agent | Collection Target |
+|-------|------------------|
+| **Explore** (quick) | Directory structure, entry points, framework |
+| **code-architect** (feature-dev) | Patterns, conventions, dependencies, data flow |
+| **Bash** (git log) | Recent changes, commit history, contributors |
+
+**Planning documents** (PRD, strategy):
+| Agent | Collection Target |
+|-------|------------------|
+| **Explore** (quick) | Read existing PRD/spec/CLAUDE.md |
+| **Read** | User-provided materials (transcripts, notes, URLs) |
+
+**Existing document proofreading**:
+| Agent | Collection Target |
+|-------|------------------|
+| **Read** | Full target document |
+| **Explore** (quick) | Related code (for accuracy verification) |
+
+Store research results as **internal context** (no file saved).
+
+---
+
+## Phase 3: STRUCTURE — Design Document Skeleton
+
+Determine document structure based on research results.
+
+### Structuring Rules
+
+1. **Use PM skill templates when available**: apply create-prd, release-notes, etc. templates directly
+2. **Code-based documents use facts only**: exclude speculation, state only what is confirmed in code
+3. **Section design principles**:
+   - Conclusion/summary → details (conclusion-first principle)
+   - Lead with background/purpose so the reader understands "why" first
+   - Action items in tables (Owner, Deadline, Status)
+4. **File naming conventions**:
    - PRD: `PRD-{product-or-feature}.md`
-   - 릴리즈: `RELEASE-{version}.md`
-   - 회의록: `Meeting-{YYYY-MM-DD}-{topic}.md`
-   - 기술: `docs/{kebab-case-name}.md`
+   - Release: `RELEASE-{version}.md`
+   - Meeting notes: `Meeting-{YYYY-MM-DD}-{topic}.md`
+   - Technical: `docs/{kebab-case-name}.md`
    - README: `README.md`
 
-`--dry-run`이면 여기서 골격만 출력하고 종료.
+If `--dry-run`, output the skeleton here and stop.
 
 ---
 
-## Phase 4: DRAFT — 작성
+## Phase 4: DRAFT — Write
 
-### PM 스킬 기반 문서
+### PM Skill-Based Documents
 
-해당 PM 커맨드를 **Skill 도구로 호출**하여 작성:
+Invoke the corresponding PM command via **Skill tool**:
 
-| 유형 | 호출 커맨드 → 스킬 |
-|------|-------------------|
-| PRD | `/write-prd` → create-prd 스킬 |
-| 유저 스토리 | `/write-stories` → user-stories 스킬 |
-| 릴리즈 노트 | `/sprint` → release-notes 스킬 |
-| 회의록 | `/meeting-notes` → summarize-meeting 스킬 |
-| 인터뷰 요약 | `/interview` → summarize-interview 스킬 |
-| 전략 | `/strategy` → product-strategy 스킬 |
-| 테스트 시나리오 | `/test-scenarios` → test-scenarios 스킬 |
+| Type | Command → Skill |
+|------|----------------|
+| PRD | `/write-prd` → create-prd skill |
+| User stories | `/write-stories` → user-stories skill |
+| Release notes | `/sprint` → release-notes skill |
+| Meeting notes | `/meeting-notes` → summarize-meeting skill |
+| Interview summary | `/interview` → summarize-interview skill |
+| Strategy | `/strategy` → product-strategy skill |
+| Test scenarios | `/test-scenarios` → test-scenarios skill |
 
-### 코드 기반 문서 (기술 문서, README, 운영, 프로젝트 문서화)
+### Code-Based Documents (technical doc, README, operations, project documentation)
 
-직접 작성하되, 아래 템플릿 구조를 따른다:
+Write directly following these template structures:
 
-**README 템플릿:**
+**README template:**
 ```markdown
-# {프로젝트명}
-> {한 줄 설명}
+# {Project Name}
+> {One-line description}
 
-## 개요
-## 기술 스택
-## 시작하기 (설치 → 실행)
-## 프로젝트 구조
-## 주요 스크립트
-## 환경 변수
-## 기여 가이드
+## Overview
+## Tech Stack
+## Getting Started (install → run)
+## Project Structure
+## Key Scripts
+## Environment Variables
+## Contributing Guide
 ```
 
-**기술 문서 템플릿:**
+**Technical doc template:**
 ```markdown
-# {문서 제목}
-> 작성일: {날짜} | 작성자: {author}
+# {Document Title}
+> Created: {date} | Author: {author}
 
-## 배경 (왜 이 문서가 필요한가)
-## 현재 상태
-## 아키텍처 / 설계
-## 주요 결정 사항 (ADR 형식)
-## 구현 상세
-## 제약 조건 / 주의사항
-## 참고 자료
+## Background (why this document is needed)
+## Current State
+## Architecture / Design
+## Key Decisions (ADR format)
+## Implementation Details
+## Constraints / Caveats
+## References
 ```
 
-**운영 문서 (RUNBOOK) 템플릿:**
+**Operations doc (RUNBOOK) template:**
 ```markdown
-# {서비스명} 운영 가이드
+# {Service Name} Operations Guide
 
-## 서비스 개요
-## 인프라 구성
-## 배포 절차
-## 모니터링 / 알림
-## 장애 대응 (시나리오별)
-## 롤백 절차
-## 연락처
+## Service Overview
+## Infrastructure Layout
+## Deployment Procedure
+## Monitoring / Alerts
+## Incident Response (by scenario)
+## Rollback Procedure
+## Contacts
 ```
 
-**프로젝트 문서화** (전체 스캔):
+**Project documentation** (full scan):
 ```markdown
 docs/
-├── README.md            — 프로젝트 개요 + 시작하기
-├── architecture.md      — 아키텍처 + 데이터 흐름
-├── api-reference.md     — API 엔드포인트 (코드에서 추출)
-└── RUNBOOK.md           — 운영 가이드
+├── README.md            — Project overview + getting started
+├── architecture.md      — Architecture + data flow
+├── api-reference.md     — API endpoints (extracted from code)
+└── RUNBOOK.md           — Operations guide
 ```
-각 파일을 순차 생성. 이미 존재하면 diff로 갱신.
+Create each file sequentially. If a file already exists, update via diff.
 
 ---
 
-## Phase 5: REVIEW — 검수 (병렬)
+## Phase 5: REVIEW — Quality Check (Parallel)
 
-작성된 문서를 **3가지 관점**에서 동시 검수한다:
+Review the drafted document from **3 angles simultaneously**:
 
-| 검수 관점 | 방법 | 검사 항목 |
-|-----------|------|----------|
-| **문법/가독성** | `grammar-check` 스킬 패턴 적용 | 문법 오류, 논리 비약, 흐름 끊김, 수동태 과다 |
-| **정확성** | 소스(코드/git) 대조 | 파일 경로 존재 확인, API 명세 일치, 버전 번호 정확 |
-| **완결성** | 템플릿 대조 | 필수 섹션 누락, TODO 잔존, 빈 섹션 |
+| Review Angle | Method | Checks |
+|-------------|--------|--------|
+| **Grammar/readability** | Apply `grammar-check` skill pattern | Grammar errors, logical gaps, flow breaks, excessive passive voice |
+| **Accuracy** | Cross-reference with source (code/git) | File path existence, API spec match, version number accuracy |
+| **Completeness** | Compare against template | Missing required sections, remaining TODOs, empty sections |
 
-### 자동 수정 기준
-- **문법 오류**: 자동 수정
-- **사실 오류** (경로/버전 불일치): 자동 수정 (소스에서 정답 확인 가능)
-- **구조 누락**: 빈 섹션 추가 + `[TODO: 내용 추가 필요]` 표시
-- **판단 필요**: 보고만 (자동 수정 안 함)
+### Auto-Fix Criteria
+- **Grammar errors**: auto-fix
+- **Factual errors** (path/version mismatch): auto-fix (correct answer verifiable from source)
+- **Structural gaps**: add empty section + `[TODO: content needed]` marker
+- **Judgment required**: report only (no auto-fix)
 
 ---
 
-## Phase 6: DELIVER — 산출물 전달
+## Phase 6: DELIVER — Deliver Output
 
-1. **파일 저장**: Write 도구로 `--output` 경로에 저장
-2. **기존 문서 갱신 시**: Edit 도구로 diff 적용 (전체 덮어쓰기 안 함)
-3. **산출물 요약 보고**:
+1. **Save file**: Write tool to `--output` path
+2. **Existing document update**: Apply diff with Edit tool (no full overwrite)
+3. **Output summary report**:
    ```
-   [DOCS] 완료
-   ├── 유형: {판별된 유형}
-   ├── 생성: {새로 만든 파일 목록}
-   ├── 갱신: {수정한 파일 목록}
-   ├── 검수: 문법 {N}건 수정, 정확성 {N}건 수정, TODO {N}건
-   └── 다음 단계: {권장 액션}
+   [DOCS] Complete
+   ├── Type: {detected type}
+   ├── Created: {list of new files}
+   ├── Updated: {list of modified files}
+   ├── Review: grammar {N} fixes, accuracy {N} fixes, TODO {N} items
+   └── Next steps: {recommended actions}
    ```
 
-## 중단 조건
-- 소스 자료 없음 (코드도 없고, 입력도 없음) → 즉시 중단, 필요 자료 안내
-- 3회 검수 실패 → 중단 + 현재까지 작성본 저장
+## Abort Conditions
+- No source material (no code, no input) → abort immediately, advise on required materials
+- Review fails 3 times → abort + save current draft

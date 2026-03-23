@@ -1,64 +1,64 @@
 # Verification Before Completion
 
-> 검증 없이 완료 선언 금지. 증거 먼저, 주장은 그 다음.
+> No completion claims without verification. Evidence first, claims second.
 
-## 핵심 규칙
-
-```
-이 메시지에서 검증 커맨드를 실행하지 않았으면, 통과했다고 주장할 수 없다.
-이전 실행은 유효하지 않다 — 코드가 변경되었을 수 있다.
-```
-
-## 검증 게이트
-
-완료, 성공, 만족을 주장하기 전에 반드시:
+## Core Rule
 
 ```
-1. IDENTIFY — 이 주장을 증명할 커맨드는?
-2. RUN      — 전체 커맨드 실행 (새로, 완전하게)
-3. READ     — 전체 출력 읽기, exit code 확인, 실패 수 카운트
-4. VERIFY   — 출력이 주장을 확인하는가?
-               No  → 실제 상태를 증거와 함께 보고
-               Yes → 증거와 함께 주장 진행
-5. CLAIM    — 이제야 결과를 말한다
+If you did not run a verification command in this message, you cannot claim it passed.
+Previous runs are invalid — the code may have changed since then.
 ```
 
-## 검증 체크리스트
+## Verification Gate
 
-| 주장 | 필요한 증거 | 불충분한 증거 |
-|------|-----------|-------------|
-| 테스트 통과 | 테스트 출력: 0 failures | 이전 실행, "통과할 것" |
-| 린터 클린 | 린터 출력: 0 errors | 부분 체크, 가정 |
-| 빌드 성공 | 빌드 커맨드: exit 0 | "린터 통과했으니 빌드도" |
-| 버그 수정 | 회귀 테스트: 통과 | "코드 변경했으니 수정됨" |
-| 에이전트 완료 | VCS diff로 변경 확인 | 에이전트 자체 보고 신뢰 |
-| 요구사항 충족 | 항목별 체크리스트 확인 | "테스트 통과 = 기능 완료" |
-
-## Red-Green 검증 (버그 수정/회귀 테스트)
+Before claiming completion, success, or satisfaction:
 
 ```
-1. 테스트 작성  → 실행 → PASS (테스트 작동 확인)
-2. 수정 되돌림  → 실행 → FAIL (테스트가 버그를 잡는지 확인)
-3. 수정 복원    → 실행 → PASS (수정이 문제를 해결하는지 확인)
+1. IDENTIFY — What command proves this claim?
+2. RUN      — Execute the full command (fresh, complete)
+3. READ     — Read the entire output, check exit code, count failures
+4. VERIFY   — Does the output confirm the claim?
+               No  → Report actual state with evidence
+               Yes → Proceed to claim with evidence
+5. CLAIM    — Only now state the result
 ```
 
-2단계에서 실패하지 않으면, 테스트가 실제로 버그를 테스트하지 않는 것이다.
+## Verification Checklist
 
-## 금지 표현
+| Claim | Required Evidence | Insufficient Evidence |
+|-------|------------------|----------------------|
+| Tests pass | Test output: 0 failures | Previous run, "should pass" |
+| Linter clean | Linter output: 0 errors | Partial check, assumption |
+| Build succeeds | Build command: exit 0 | "Linter passed so build will too" |
+| Bug fixed | Regression test: passes | "Code changed so it's fixed" |
+| Agent task complete | VCS diff confirms changes | Trusting agent self-report |
+| Requirements met | Line-by-line checklist verified | "Tests pass = feature complete" |
 
-| 생각 | 현실 |
-|------|------|
-| "아마 될 거야" | 검증 실행 |
-| "확신해" | 확신은 증거가 아님 |
-| "린터 통과했으니..." | 린터 ≠ 컴파일러 ≠ 테스트 |
-| "에이전트가 성공했다고 했어" | 독립적으로 검증 |
-| "간단한 변경이니 검증 불필요" | 간단한 변경도 깨짐 |
-| "아까 실행했어" | 아까 ≠ 지금 |
+## Red-Green Verification (Bug Fix / Regression Test)
 
-## 적용 시점
+```
+1. Write test   → Run → PASS (confirms test works)
+2. Revert fix   → Run → FAIL (confirms test catches the bug)
+3. Restore fix  → Run → PASS (confirms fix resolves the bug)
+```
 
-항상. 아래 행위 전에 반드시:
-- 성공/완료 주장
-- 커밋 또는 PR 생성
-- 태스크 완료 표시
-- 다음 태스크로 이동
+If step 2 does not fail, the test is not actually testing the fix.
+
+## Banned Expressions
+
+| Thought | Reality |
+|---------|---------|
+| "It probably works" | Run verification |
+| "I'm confident" | Confidence is not evidence |
+| "Linter passed, so..." | Linter ≠ compiler ≠ tests |
+| "The agent said it succeeded" | Verify independently |
+| "Simple change, no verification needed" | Simple changes break too |
+| "I already ran it earlier" | Earlier ≠ now |
+
+## When to Apply
+
+Always. Mandatory before:
+- Claiming success/completion
+- Creating commits or PRs
+- Marking tasks as complete
+- Moving to the next task

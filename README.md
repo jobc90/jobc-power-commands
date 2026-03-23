@@ -1,5 +1,7 @@
 # jobc-power-commands
 
+[English](README.en.md) | **한국어**
+
 > [Claude Code](https://claude.ai/code)와 Codex에서 사용할 수 있는 파워 커맨드/스킬 5종
 
 코드 리뷰, 팀 오케스트레이션, 대규모 자동화, 체계적 문서화, 프론트엔드 디자인을 Claude Code 슬래시 커맨드와 Codex 스킬로 실행합니다.

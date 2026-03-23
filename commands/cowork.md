@@ -1,56 +1,56 @@
 ---
-description: "지휘자가 코드베이스를 정찰하고, Wave(순차→병렬→마무리) 구조로 에이전트 팀에 작업 분배. PM 커맨드로 계획, 충돌 병합, 빌드 검증까지."
+description: "Conductor scouts the codebase and distributes tasks to agent teams in Wave structure (sequential → parallel → finalize). PM commands for planning, conflict merging, and build verification."
 ---
 
-# /cowork — 지휘자 + Agent Teams 병렬 오케스트레이션
+# /cowork — Conductor + Agent Teams Parallel Orchestration
 
-지휘자(나)는 코드를 한 줄도 쓰지 않는다. 정찰 → 계획 → 분배 → 취합 → 검증만 한다.
+The conductor (me) writes zero lines of code. Scout → Plan → Distribute → Consolidate → Verify only.
 
-## 인자
-- 첫 번째 인자: 작업 설명 (필수)
-- `--agents N`: 병렬 에이전트 수 (기본 3, 최대 5)
+## Arguments
+- First argument: task description (required)
+- `--agents N`: number of parallel agents (default 3, max 5)
 
-## 핵심 규칙
-1. 지휘자는 Read/Grep/Glob만 사용. Write/Edit 금지 (병합 제외)
-2. 작업 지시 전에 Explore 에이전트로 코드베이스 완전 파악
-3. 각 에이전트에게 **파일 경로 + 성공 기준 + 금지사항**을 명시
-4. 같은 파일을 두 에이전트가 수정하면 안 됨
-5. 공유 파일(types/utils)은 Wave 1에서 선행 처리
+## Core Rules
+1. Conductor uses Read/Grep/Glob only. Write/Edit forbidden (except for merging)
+2. Before assigning tasks, use Explore agent to fully understand the codebase
+3. Provide each agent with **file paths + success criteria + prohibitions**
+4. No two agents may modify the same file
+5. Shared files (types/utils) are handled first in Wave 1
 
-## 실행
+## Execution
 
-### Phase 1: 정찰
-Explore 에이전트 호출 → 아키텍처, 디렉토리, 핵심 파일, 의존성 파악.
-+ `code-architect` (feature-dev) 에이전트로 기존 패턴 분석.
+### Phase 1: Scout
+Invoke Explore agent → understand architecture, directories, key files, dependencies.
++ `code-architect` (feature-dev) agent to analyze existing patterns.
 
-### Phase 2: 계획
-작업 규모에 따라 PM 스킬 자동 선택:
+### Phase 2: Plan
+Auto-select PM skill based on task scope:
 
-| 규모 | 커맨드 |
-|------|--------|
-| 3+ 파일 신규 기능 | `/write-prd` → PRD 작성 → `/write-stories` → 스토리 분할 |
-| 리팩토링 | `/write-stories` → 작업 분할 |
-| 버그 묶음 | `/test-scenarios` → 시나리오 + 회귀 테스트 |
-| 리스크 높음 | `/pre-mortem` → 리스크 식별 후 분할 |
+| Scope | Command |
+|-------|---------|
+| 3+ file new feature | `/write-prd` → write PRD → `/write-stories` → split into stories |
+| Refactoring | `/write-stories` → split into tasks |
+| Bug batch | `/test-scenarios` → scenarios + regression tests |
+| High risk | `/pre-mortem` → identify risks then split |
 
-분할 결과: `Wave 1(순차) → Wave 2(병렬) → Wave 3(마무리)` 구조.
+Split result: `Wave 1 (sequential) → Wave 2 (parallel) → Wave 3 (finalize)` structure.
 
-### Phase 3: 분배
-에이전트별 작업 지시서:
+### Phase 3: Distribute
+Task brief per agent:
 ```
-당신은 {역할}. 아래 파일만 수정하세요.
-컨텍스트: {정찰 결과 요약}
-수정 대상: {파일 경로 목록}
-성공 기준: {체크리스트}
-금지: 대상 외 파일 수정, 기존 테스트 깨뜨림, 미설치 패키지 import
+You are {role}. Modify only the files below.
+Context: {scout summary}
+Target files: {file path list}
+Success criteria: {checklist}
+Prohibited: modifying files outside scope, breaking existing tests, importing uninstalled packages
 ```
-Wave 1 완료 후 Wave 2 에이전트를 **한 메시지에 동시 호출**.
+After Wave 1 completes, invoke Wave 2 agents **simultaneously in a single message**.
 
-### Phase 4: 취합
-1. `git diff`로 충돌 확인
-2. import 정합성 + 타입 일관성 확인
-3. 충돌 시 지휘자가 Edit으로 병합
+### Phase 4: Consolidate
+1. Check conflicts with `git diff`
+2. Verify import consistency + type coherence
+3. If conflicts exist, conductor merges with Edit
 
-### Phase 5: 검증
+### Phase 5: Verify
 `pnpm build` → `pnpm lint` → `pnpm test`.
-실패 시 해당 에이전트에게 SendMessage로 수정 지시 (최대 3회).
+On failure: send fix instructions to the responsible agent via SendMessage (max 3 attempts).

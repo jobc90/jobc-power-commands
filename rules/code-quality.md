@@ -1,10 +1,10 @@
 # Code Quality Principles
 
-> 깔끔하고 유지보수 가능한 코드를 위한 핵심 원칙.
+> Core principles for clean, maintainable code.
 
-## 1. 불변성 (CRITICAL)
+## 1. Immutability (CRITICAL)
 
-객체를 수정하지 않는다. 항상 새 객체를 생성한다:
+Never mutate objects. Always create new ones:
 
 ```javascript
 // WRONG
@@ -19,16 +19,16 @@ function updateUser(user, name) {
 }
 ```
 
-성능이 문제라면 프로파일링으로 증명한 후에만 예외.
+Exception only after profiling proves a performance issue.
 
-## 2. 작은 파일, 작은 함수
+## 2. Small Files, Small Functions
 
-- 파일: 800줄 최대 (400줄부터 분할 검토)
-- 함수: 50줄 최대
-- 중첩: 4단계 최대
-- 초과 시 분할
+- File: 800 lines max (review for splitting at 400+)
+- Function: 50 lines max
+- Nesting: 4 levels max
+- Split when exceeded
 
-## 3. 에러 핸들링
+## 3. Error Handling
 
 ```typescript
 try {
@@ -40,9 +40,9 @@ try {
 }
 ```
 
-## 4. 시스템 경계에서 검증
+## 4. Validate at System Boundaries
 
-내부 코드는 신뢰하되, 사용자 입력과 외부 API 응답은 반드시 검증:
+Trust internal code, but always validate user input and external API responses:
 
 ```typescript
 import { z } from 'zod'
@@ -55,42 +55,42 @@ const schema = z.object({
 const validated = schema.parse(input)
 ```
 
-## 5. Surgical Changes (외과적 변경)
+## 5. Surgical Changes
 
-요청된 것만 변경한다. 변경된 모든 줄은 사용자 요청에 직접 연결되어야 한다.
+Change only what was requested. Every changed line must trace directly to the user's request.
 
-- 인접 코드, 코멘트, 포맷팅을 "개선"하지 않는다
-- 기존 스타일을 따른다 (다르게 하고 싶어도)
-- 관련 없는 데드코드: 언급만, 삭제하지 않음
-- 자기 변경이 만든 고아(unused import 등)만 정리
+- Do not "improve" adjacent code, comments, or formatting
+- Match existing style (even if you would do it differently)
+- Unrelated dead code: mention it, do not delete it
+- Clean up only orphans (unused imports, etc.) created by your own changes
 
-## 6. 결론 우선, 이유는 나중
+## 6. Conclusion First, Reasoning Second
 
-첫 문장에 결론. "왜냐하면..."은 그 후에.
+Lead with the conclusion in the first sentence. Add "because..." after.
 
-## 7. 증거 기반 완료
+## 7. Evidence-Based Completion
 
-"될 거야"는 증거가 아니다. 완료 주장 전에:
-1. 테스트 결과 (통과/실패 수, 커버리지)
-2. 빌드 성공 확인
-3. 요구사항 체크리스트 증거 대조
+"It should work" is not evidence. Before claiming completion:
+1. Test results (pass/fail count, coverage)
+2. Build success confirmed
+3. Requirements checklist verified against evidence
 
-금지: "문제 없을 거야", "이슈 예상 안 됨"
-필수: "12 테스트 통과", "빌드 성공 (0 errors)"
+Banned: "No issues expected", "Should work fine"
+Required: "12 tests passed", "Build success (0 errors)"
 
-## 8. 3+ 파일 변경 시 계획 먼저
+## 8. Plan Before Changing 3+ Files
 
-3개 이상 파일 변경이 예상되면 구현 전에 계획을 세운다.
-예외: 1-2 파일, 타이포/버그 패치.
+If 3 or more files are expected to change, create a plan before implementing.
+Exception: 1-2 files, typo/bug patches.
 
-## 코드 품질 체크리스트
+## Code Quality Checklist
 
-완료 전 확인:
-- [ ] 읽기 쉽고 잘 명명됨
-- [ ] 함수 50줄 미만
-- [ ] 파일 800줄 미만
-- [ ] 깊은 중첩 없음 (4단계 이하)
-- [ ] 에러 핸들링 적절
-- [ ] console.log 없음
-- [ ] 하드코딩된 값 없음
-- [ ] 뮤테이션 없음 (불변 패턴 사용)
+Verify before completion:
+- [ ] Readable and well-named
+- [ ] Functions under 50 lines
+- [ ] Files under 800 lines
+- [ ] No deep nesting (4 levels or fewer)
+- [ ] Proper error handling
+- [ ] No console.log statements
+- [ ] No hardcoded values
+- [ ] No mutation (immutable patterns used)

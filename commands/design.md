@@ -1,334 +1,334 @@
 ---
-description: "3-다이얼(Variance/Motion/Density) + 프리셋(landing/dashboard/workspace)으로 프론트엔드 디자인 품질 제어. init으로 디자인 시스템 생성/업데이트, /super와 자동 연동."
+description: "3-dial system (Variance/Motion/Density) + presets (landing/dashboard/workspace) for frontend design quality control. init creates/updates design system, auto-integrates with /super."
 ---
 
-# /design — 프론트엔드 디자인 품질 제어
+# /design — Frontend Design Quality Control
 
-3개 다이얼(Variance, Motion, Density)로 디자인 톤을 제어하고, 프리셋 또는 커스텀 조합으로 프론트엔드를 생성한다.
-taste-skill 생태계를 통합 진입점 하나로 활용한다.
+Control design tone with 3 dials (Variance, Motion, Density), using presets or custom combinations to generate frontend code.
+Serves as a single entry point to the taste-skill ecosystem.
 
-## 인자
+## Arguments
 
-### 서브커맨드
-- `init`: 대화형 design.md 생성기 (새 프로젝트 / 리디자인 자동 판별)
+### Subcommands
+- `init`: interactive design.md generator (auto-detects new project vs. redesign)
 
-### 프리셋 (스타일명)
-- `--soft`: 에이전시급 프리미엄
-- `--minimal`: 에디토리얼 미니멀리즘
-- `--brutal`: 스위스 타이포 + 군용 터미널
-- `--redesign`: 기존 사이트 분석 → 업그레이드
+### Presets (by style name)
+- `--soft`: agency-grade premium
+- `--minimal`: editorial minimalism
+- `--brutal`: Swiss typography + military terminal
+- `--redesign`: analyze existing site → upgrade
 
-### 프리셋 (용도명) — 스타일명의 별칭
+### Presets (by use case) — aliases for style names
 - `--landing`: = `--soft` (V7/M8/D3)
 - `--dashboard`: = `--brutal` (V6/M2/D8)
 - `--workspace`: = `--minimal` (V4/M3/D5)
 - `--portfolio`: = `--soft` (V8/M7/D2)
 - `--admin`: = taste-skill (V2/M3/D9)
 
-### 커스텀 다이얼
-- `--v N` / `--variance N`: 레이아웃 실험성 (1-10, 기본 8)
-- `--m N` / `--motion N`: 애니메이션 강도 (1-10, 기본 6)
-- `--d N` / `--density N`: 화면 채움도 (1-10, 기본 4)
+### Custom Dials
+- `--v N` / `--variance N`: layout experimentalism (1-10, default 8)
+- `--m N` / `--motion N`: animation intensity (1-10, default 6)
+- `--d N` / `--density N`: screen fill density (1-10, default 4)
 
-### 옵션
-- `--output-guard`: 코드 잘림/생략 방지 (어떤 프리셋과도 병용)
+### Options
+- `--output-guard`: prevent code truncation/omission (combinable with any preset)
 
 ---
 
-## /design init — 대화형 디자인 시스템 생성/업데이트
+## /design init — Interactive Design System Generator/Updater
 
-프로젝트 상태를 자동 감지하여 3가지 모드 중 하나로 진행한다.
+Auto-detect project state and proceed in one of 3 modes.
 
-### 디자인 시스템 파일 탐색
+### Design System File Search
 
-프로젝트에서 아래 패턴을 순서대로 탐색한다. 첫 번째로 발견된 파일을 디자인 시스템 파일로 사용한다.
+Search the project for the following patterns in order. Use the first file found as the design system file.
 
 ```
 1. design.md, DESIGN.md
 2. designsystem.md, DESIGNSYSTEM.md, design-system.md, DESIGN-SYSTEM.md
 3. docs/design.md, docs/DESIGN.md, docs/design-system.md
-4. *DESIGN*.md, *design_system*.md (Glob 패턴 — 프로젝트별 커스텀 이름)
+4. *DESIGN*.md, *design_system*.md (Glob patterns — project-specific custom names)
 ```
 
-예시: `BENEEDS_DESIGN_SYSTEM.md`, `MyApp_Design.md`, `docs/design-tokens.md` 등 모두 감지.
+Examples: `BENEEDS_DESIGN_SYSTEM.md`, `MyApp_Design.md`, `docs/design-tokens.md` are all detected.
 
-### 실행 흐름
+### Execution Flow
 
 ```
-디자인 시스템 파일이 이미 있는가?
-├── YES → 업데이트 모드
-│   1. 기존 파일 읽기 (preset, 다이얼, 컬러, 폰트 등 현재 설정 파악)
-│   2. 질문: "어떻게 바꾸고 싶으세요?"
-│      → "더 화려하게" → VARIANCE↑ MOTION↑ 추천
-│      → "더 깔끔하게" → VARIANCE↓ MOTION↓ DENSITY↓ 추천
-│      → "대시보드로 전환" → brutal 프리셋 추천
-│      → "프리셋 변경" → 새 프리셋 선택
-│      → 커스텀 다이얼 직접 지정
-│   3. 기존 파일을 diff 업데이트 (전체 덮어쓰기 아님)
-│      → 변경된 항목만 갱신 (프리셋, 다이얼, 컬러, 모션 등)
-│      → 기존 커스텀 컴포넌트 규칙은 유지
+Does a design system file already exist?
+├── YES → Update mode
+│   1. Read existing file (understand current preset, dials, colors, fonts, etc.)
+│   2. Ask: "How would you like to change it?"
+│      → "More vibrant" → recommend VARIANCE↑ MOTION↑
+│      → "Cleaner" → recommend VARIANCE↓ MOTION↓ DENSITY↓
+│      → "Switch to dashboard" → recommend brutal preset
+│      → "Change preset" → select new preset
+│      → Specify custom dial values directly
+│   3. Diff-update existing file (not full overwrite)
+│      → Update only changed items (preset, dials, colors, motion, etc.)
+│      → Preserve existing custom component rules
 │
-├── NO + 프론트엔드 코드 있음 → 리디자인 모드
-│   1. Scan: 프레임워크, CSS 방식, 현재 폰트/색상/레이아웃 분석
-│   2. Diagnose: 79항목 감사 → 주요 문제점 요약 보고
-│   3. 질문: "어떤 방향으로 리디자인할까요?"
-│      → 프리셋 선택 또는 참고 URL
-│   4. 디자인 시스템 파일 생성 (현재 문제점 + 목표 프리셋 + 다이얼)
+├── NO + frontend code exists → Redesign mode
+│   1. Scan: analyze framework, CSS approach, current fonts/colors/layout
+│   2. Diagnose: 79-item audit → summarize key issues
+│   3. Ask: "What direction for the redesign?"
+│      → Select preset or provide reference URL
+│   4. Generate design system file (current issues + target preset + dials)
 │
-└── NO + 프론트엔드 코드 없음 → 새 프로젝트 모드
-    1. 질문: "어떤 종류의 프로젝트인가요?"
-       → SaaS 랜딩 / 대시보드 / 워크스페이스 / 포트폴리오 / 커머스 / 기타
-    2. 질문: "참고할 사이트가 있나요?" (선택)
-    3. 용도에 맞는 프리셋 자동 추천
-    4. design.md 생성 (프리셋 + 다이얼 + 컬러 팔레트 + 폰트)
+└── NO + no frontend code → New project mode
+    1. Ask: "What kind of project?"
+       → SaaS landing / dashboard / workspace / portfolio / commerce / other
+    2. Ask: "Any reference sites?" (optional)
+    3. Auto-recommend preset matching the use case
+    4. Generate design.md (preset + dials + color palette + fonts)
 ```
 
-### 업데이트 모드 상세
+### Update Mode Details
 
-기존 디자인 시스템 파일의 다이얼 값을 기준으로 방향을 추천한다:
+Recommend direction based on existing design system file's dial values:
 
-| 사용자 의도 | 현재 V5/M4/D5 기준 추천 |
-|------------|----------------------|
-| "더 화려하게" | V→8, M→7 (레이아웃 비대칭 + 모션 강화) |
-| "더 차분하게" | V→3, M→2 (그리드 정돈 + 모션 최소화) |
-| "더 여유롭게" | D→2 (갤러리 모드, 넓은 여백) |
-| "더 빽빽하게" | D→8 (콕핏 모드, 카드 대신 구분선) |
-| "럭셔리 느낌" | V→8, M→7, D→2 |
-| "실용적으로" | V→3, M→3, D→7 |
+| User Intent | Recommendation (from V5/M4/D5 baseline) |
+|-------------|----------------------------------------|
+| "More vibrant" | V→8, M→7 (asymmetric layout + stronger motion) |
+| "Calmer" | V→3, M→2 (tidy grid + minimal motion) |
+| "More spacious" | D→2 (gallery mode, wide margins) |
+| "More dense" | D→8 (cockpit mode, dividers instead of cards) |
+| "Luxury feel" | V→8, M→7, D→2 |
+| "Practical" | V→3, M→3, D→7 |
 
-프리셋 변경 시, 연관된 컬러/폰트/모션 규칙도 함께 갱신한다.
+When changing presets, update associated color/font/motion rules together.
 
-### 생성되는 design.md 구조
+### Generated design.md Structure
 
 ```markdown
-# Design System: {프로젝트명}
+# Design System: {Project Name}
 
-## 현재 상태 (리디자인 모드에서만)
-- 폰트: {현재 폰트} (→ 교체 필요)
-- 색상: {현재 문제점}
-- 레이아웃: {현재 문제점}
-- 모션: {현재 상태}
-- 상태: {Loading/Empty/Error 존재 여부}
+## Current State (redesign mode only)
+- Font: {current font} (→ needs replacement)
+- Colors: {current issues}
+- Layout: {current issues}
+- Motion: {current state}
+- States: {Loading/Empty/Error existence}
 
-## 목표
-preset: {프리셋명}
+## Goals
+preset: {preset name}
 variance: {N}
 motion: {N}
 density: {N}
 
-## 컬러 팔레트
+## Color Palette
 - Canvas: {hex}
 - Surface: {hex}
 - Text: {hex}
-- Accent: {hex} (1개만)
-- Base: {Zinc 또는 Slate}
+- Accent: {hex} (single only)
+- Base: {Zinc or Slate}
 
-## 타이포그래피
-- Display: {폰트}, {스케일}
-- Body: {폰트}, {스케일}
-- Mono: {폰트}
+## Typography
+- Display: {font}, {scale}
+- Body: {font}, {scale}
+- Mono: {font}
 - Banned: Inter, Roboto, Arial, Open Sans
 
-## 컴포넌트 규칙
-(프리셋에 맞는 카드, 버튼, 인풋, 네비게이션 스타일)
+## Component Rules
+(Card, button, input, navigation styles matching the preset)
 
-## 모션
-(다이얼 값에 맞는 전환, 애니메이션, 인터랙션 규칙)
+## Motion
+(Transition, animation, interaction rules matching dial values)
 
-## 반응형
-- Mobile collapse: 768px 미만 단일 컬럼
+## Responsive
+- Mobile collapse: single column below 768px
 - Touch targets: 44px+
 - Typography scaling: clamp()
 ```
 
-`/design init` 완료 후, 사용자에게 다음 단계를 안내한다:
+After `/design init` completes, guide the user to the next step:
 ```
-{파일명} 생성/업데이트 완료.
-다음 단계: /super 서비스 구현해줘
-(디자인 시스템 파일을 자동으로 감지하여 디자인 규칙이 적용됩니다)
+{filename} created/updated.
+Next step: /super Implement the service
+(The design system file will be auto-detected and design rules will be applied)
 ```
 
-업데이트 모드에서는 기존 파일명을 그대로 유지한다 (예: `BENEEDS_DESIGN_SYSTEM.md` → 같은 파일 갱신).
+In update mode, keep the existing filename (e.g., `BENEEDS_DESIGN_SYSTEM.md` → update the same file).
 
 ---
 
-## 3-다이얼 시스템
+## 3-Dial System
 
-### DESIGN_VARIANCE — 레이아웃 실험성
+### DESIGN_VARIANCE — Layout Experimentalism
 
-| 범위 | 스타일 | 특징 |
-|------|--------|------|
-| 1-3 | 정돈된 그리드 | 12-column, 대칭, 균일 패딩 |
-| 4-7 | 오프셋 | margin 겹침, 다양한 비율, 좌측 정렬 헤더 |
-| 8-10 | 비대칭 | Masonry, fractional Grid, broken-grid, 넓은 여백 |
+| Range | Style | Characteristics |
+|-------|-------|----------------|
+| 1-3 | Orderly grid | 12-column, symmetric, uniform padding |
+| 4-7 | Offset | Margin overlap, varied ratios, left-aligned headers |
+| 8-10 | Asymmetric | Masonry, fractional grid, broken-grid, wide margins |
 
-모바일 오버라이드: 4-10은 768px 미만에서 단일 컬럼 (`w-full`, `px-4`)으로 붕괴.
+Mobile override: ranges 4-10 collapse to single column below 768px (`w-full`, `px-4`).
 
-### MOTION_INTENSITY — 애니메이션 강도
+### MOTION_INTENSITY — Animation Intensity
 
-| 범위 | 스타일 | 특징 |
-|------|--------|------|
-| 1-3 | 정적 | hover/active 상태만. 자동 애니메이션 없음 |
-| 4-7 | 유려한 CSS | `cubic-bezier(0.16,1,0.3,1)`, 딜레이 캐스케이드, transform+opacity |
-| 8-10 | 고급 안무 | 스크롤 트리거, Framer Motion, 패럴랙스, 영구 마이크로 애니메이션 |
+| Range | Style | Characteristics |
+|-------|-------|----------------|
+| 1-3 | Static | hover/active states only. No auto-animation |
+| 4-7 | Fluid CSS | `cubic-bezier(0.16,1,0.3,1)`, delay cascades, transform+opacity |
+| 8-10 | Choreographed | Scroll triggers, Framer Motion, parallax, persistent micro-animations |
 
-### VISUAL_DENSITY — 화면 채움도
+### VISUAL_DENSITY — Screen Fill Density
 
-| 범위 | 스타일 | 특징 |
-|------|--------|------|
-| 1-3 | 갤러리 | 넓은 여백, 큰 섹션 간격, 럭셔리 |
-| 4-7 | 일반 앱 | 표준 웹/앱 수준 |
-| 8-10 | 콕핏 | 작은 패딩, 카드 대신 구분선, 모노스페이스 숫자, 대시보드 |
-
----
-
-## 프리셋 매핑
-
-| 프리셋 (스타일) | 프리셋 (용도) | V | M | D | 스킬 | 용도 |
-|----------------|-------------|---|---|---|------|------|
-| (기본) | — | 8 | 6 | 4 | taste-skill | 범용 프론트엔드 |
-| `--soft` | `--landing` | 7 | 8 | 3 | soft-skill | 랜딩, SaaS |
-| `--soft` | `--portfolio` | 8 | 7 | 2 | soft-skill | 포트폴리오 |
-| `--minimal` | `--workspace` | 4 | 3 | 5 | minimalist-skill | 워크스페이스 |
-| `--brutal` | `--dashboard` | 6 | 2 | 8 | brutalist-skill | 대시보드 |
-| — | `--admin` | 2 | 3 | 9 | taste-skill | 관리자 패널 |
-| `--redesign` | `--redesign` | (분석) | (분석) | (분석) | redesign-skill | 기존 사이트 업그레이드 |
+| Range | Style | Characteristics |
+|-------|-------|----------------|
+| 1-3 | Gallery | Wide margins, large section gaps, luxury |
+| 4-7 | Standard app | Normal web/app level |
+| 8-10 | Cockpit | Tight padding, dividers instead of cards, monospace numbers, dashboard |
 
 ---
 
-## 실행
+## Preset Mapping
 
-### 1. 모드 결정
+| Preset (Style) | Preset (Use Case) | V | M | D | Skill | Use Case |
+|----------------|-------------------|---|---|---|-------|----------|
+| (default) | — | 8 | 6 | 4 | taste-skill | General frontend |
+| `--soft` | `--landing` | 7 | 8 | 3 | soft-skill | Landing, SaaS |
+| `--soft` | `--portfolio` | 8 | 7 | 2 | soft-skill | Portfolio |
+| `--minimal` | `--workspace` | 4 | 3 | 5 | minimalist-skill | Workspace |
+| `--brutal` | `--dashboard` | 6 | 2 | 8 | brutalist-skill | Dashboard |
+| — | `--admin` | 2 | 3 | 9 | taste-skill | Admin panel |
+| `--redesign` | `--redesign` | (analyzed) | (analyzed) | (analyzed) | redesign-skill | Existing site upgrade |
 
-1. `init` 서브커맨드 → design.md 생성기 실행
-2. 프리셋 플래그 (스타일명 또는 용도명) → 해당 스킬 활성화
-3. 커스텀 다이얼(`--v`, `--m`, `--d`) → taste-skill 다이얼 오버라이드
-4. 플래그 없음 → taste-skill 기본값 (V8/M6/D4)
+---
 
-### 2. 스킬 라우팅
+## Execution
 
-| 모드 | 활성화 스킬 |
-|------|------------|
-| 기본 / 커스텀 다이얼 / `--admin` | taste-skill (DESIGN_VARIANCE={V}, MOTION_INTENSITY={M}, VISUAL_DENSITY={D}) |
+### 1. Determine Mode
+
+1. `init` subcommand → run design.md generator
+2. Preset flag (style name or use case name) → activate corresponding skill
+3. Custom dials (`--v`, `--m`, `--d`) → taste-skill dial override
+4. No flags → taste-skill defaults (V8/M6/D4)
+
+### 2. Skill Routing
+
+| Mode | Activated Skill |
+|------|----------------|
+| Default / custom dials / `--admin` | taste-skill (DESIGN_VARIANCE={V}, MOTION_INTENSITY={M}, VISUAL_DENSITY={D}) |
 | `--soft` / `--landing` / `--portfolio` | soft-skill |
 | `--minimal` / `--workspace` | minimalist-skill |
 | `--brutal` / `--dashboard` | brutalist-skill |
-| `--redesign` | redesign-skill (Scan → Diagnose → Fix 순서) |
+| `--redesign` | redesign-skill (Scan → Diagnose → Fix sequence) |
 
-`--output-guard` 지정 시 output-skill을 **병행 활성화** — 코드 생략/placeholder 패턴 차단.
+When `--output-guard` is specified, **co-activate** output-skill — blocks code omission/placeholder patterns.
 
-### 3. 기본 디자인 규칙 (모든 모드)
+### 3. Base Design Rules (All Modes)
 
-taste-skill이 설치되면 상세 규칙은 해당 스킬이 제공한다.
-아래는 taste-skill 유무와 관계없이 항상 적용되는 기본 규칙이다.
+When taste-skill is installed, it provides detailed rules.
+The following base rules apply regardless of taste-skill availability.
 
-#### 타이포그래피
+#### Typography
 
-**권장 폰트** (Inter, Roboto, Arial, Open Sans 금지):
+**Recommended fonts** (Inter, Roboto, Arial, Open Sans banned):
 - Display/Headlines: `Geist`, `Outfit`, `Cabinet Grotesk`, `Satoshi`
-- Body: 기존 프로젝트 폰트 또는 위 목록에서 선택
+- Body: existing project font or select from the list above
 - Monospace: `Geist Mono`, `JetBrains Mono`
-- 세리프: 크리에이티브/에디토리얼 전용. 대시보드/소프트웨어 UI에서는 금지
+- Serif: creative/editorial only. Banned in dashboards/software UI
 
-**타이포 스케일:**
+**Typographic scale:**
 - Display: `text-4xl md:text-6xl tracking-tighter leading-none`
 - Body: `text-base text-gray-600 leading-relaxed max-w-[65ch]`
-- 순수 `#000000` 금지 → off-black (`#111111`, `zinc-950`)
+- Pure `#000000` banned → use off-black (`#111111`, `zinc-950`)
 
-#### 컬러
+#### Color
 
-- 악센트 컬러 **최대 1개**, 채도 80% 미만
-- 베이스: Zinc 또는 Slate 계열 중성색
-- "AI 퍼플/블루" 금지 — 보라 버튼 글로우, 네온 그라디언트 금지
-- 프로젝트 내 warm/cool gray 혼용 금지 — 하나로 통일
+- Maximum **1 accent color**, saturation < 80%
+- Base: Zinc or Slate neutral tones
+- "AI purple/blue" banned — no purple button glow, no neon gradients
+- No mixing warm/cool grays in a project — pick one and unify
 
-#### 레이아웃
+#### Layout
 
-- 3-column 균등 카드 금지 → 2-column 지그재그, 비대칭 그리드, 수평 스크롤
-- `h-screen` 금지 → `min-h-[100dvh]` (iOS Safari 뷰포트 점프 방지)
-- 복잡한 flexbox calc 금지 → CSS Grid
-- VARIANCE > 4일 때 중앙 정렬 Hero 금지
-- DENSITY > 7일 때 카드 컨테이너 금지 → `border-t`, `divide-y`, 네거티브 스페이스로 그룹핑
+- 3-column equal cards banned → use 2-column zigzag, asymmetric grid, horizontal scroll
+- `h-screen` banned → `min-h-[100dvh]` (prevents iOS Safari viewport jump)
+- Complex flexbox calc banned → use CSS Grid
+- Center-aligned Hero banned when VARIANCE > 4
+- Card containers banned when DENSITY > 7 → use `border-t`, `divide-y`, negative space for grouping
 
-#### 모션 기본값
+#### Motion Defaults
 
-- 전환: `transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`
+- Transition: `transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`
 - Spring physics: `stiffness: 100, damping: 20`
-- Tactile feedback: `:active` 시 `-translate-y-[1px]` 또는 `scale-[0.98]`
-- `transform`과 `opacity`만 애니메이션. `top`, `left`, `width`, `height` 절대 금지
-- MOTION > 5일 때 Framer Motion 사용 시 `useMotionValue`/`useTransform` (React useState 금지)
+- Tactile feedback: `:active` with `-translate-y-[1px]` or `scale-[0.98]`
+- Animate only `transform` and `opacity`. Never animate `top`, `left`, `width`, `height`
+- When MOTION > 5 and using Framer Motion: use `useMotionValue`/`useTransform` (no React useState)
 
-#### 콘텐츠
+#### Content
 
-- "John Doe", "Acme", "Nexus" 등 제네릭 이름 금지
-- `99.99%`, `50%` 등 가짜 라운드 숫자 금지 → `47.2%`, `+1 (312) 847-1928`
-- "Elevate", "Seamless", "Unleash" 등 AI 클리셰 금지
-- 깨진 Unsplash 링크 금지 → `picsum.photos/seed/{id}/800/600` 또는 SVG 아바타
+- Generic names banned: "John Doe", "Acme", "Nexus"
+- Fake round numbers banned: `99.99%`, `50%` → use `47.2%`, `+1 (312) 847-1928`
+- AI cliches banned: "Elevate", "Seamless", "Unleash"
+- Broken Unsplash links banned → use `picsum.photos/seed/{id}/800/600` or SVG avatars
 
-#### 기술
+#### Technical
 
-- shadcn/ui 기본 상태 금지 — radius, color, shadow 반드시 커스터마이즈
-- React/Next.js: Server Components 기본. 글로벌 상태는 `"use client"` 래퍼 안에서만
-- Tailwind: v3/v4 문법 차이 주의. 프로젝트 버전 확인 후 작성
-- 의존성 import 전 package.json 확인 — 미설치 패키지 import 금지
-- 이모지 전면 금지 — `@phosphor-icons/react` 또는 `@radix-ui/react-icons`
+- Default shadcn/ui banned — must customize radius, color, shadow
+- React/Next.js: Server Components by default. Global state only inside `"use client"` wrappers
+- Tailwind: mind v3/v4 syntax differences. Check project version before writing
+- Check package.json before importing dependencies — no uninstalled package imports
+- Emojis fully banned — use `@phosphor-icons/react` or `@radix-ui/react-icons`
 
-#### 필수 상태
+#### Required States
 
-- Loading: 레이아웃 크기에 맞춘 스켈레톤 로더 (원형 스피너 금지)
-- Empty: 구성된 빈 상태 화면
-- Error: 인라인 에러 리포팅
-- Tactile: `:active` 시 `-translate-y-[1px]` 또는 `scale-[0.98]`
-- 768px 미만 단일 컬럼 붕괴, 가로 스크롤 금지
+- Loading: skeleton loader matching layout size (circular spinners banned)
+- Empty: composed empty state screen
+- Error: inline error reporting
+- Tactile: `:active` with `-translate-y-[1px]` or `scale-[0.98]`
+- Single-column collapse below 768px, no horizontal scroll
 
-### 4. redesign 모드 실행 순서
+### 4. Redesign Mode Execution Order
 
-`--redesign` 지정 시:
-1. **Scan** — 코드베이스 읽기, 프레임워크/스타일링 방식 식별
-2. **Diagnose** — 79항목 체크리스트 감사 (타이포, 색상, 레이아웃, 인터랙션, 콘텐츠, 컴포넌트, 아이콘, 코드 품질)
-3. **Fix** — 우선순위별 수정:
-   1. 폰트 교체 (최대 임팩트, 최저 리스크)
-   2. 색상 팔레트 정리
-   3. hover/active 상태 추가
-   4. 레이아웃/간격 조정
-   5. 제네릭 컴포넌트 교체
-   6. Loading/Empty/Error 상태 추가
-   7. 타이포그래피/간격 폴리시
+When `--redesign` is specified:
+1. **Scan** — read codebase, identify framework/styling approach
+2. **Diagnose** — 79-item checklist audit (typography, color, layout, interaction, content, components, icons, code quality)
+3. **Fix** — prioritized fixes:
+   1. Font replacement (highest impact, lowest risk)
+   2. Color palette cleanup
+   3. Add hover/active states
+   4. Layout/spacing adjustments
+   5. Replace generic components
+   6. Add Loading/Empty/Error states
+   7. Typography/spacing polish
 
-기능은 유지. 디자인만 개선.
+Preserve functionality. Improve design only.
 
 ---
 
-## 사용 예시
+## Usage Examples
 
 ```bash
-# design.md 생성 (최초 1회)
+# Create design.md (once)
 /design init
 
-# 프리셋 (스타일명)
-/design --soft SaaS 랜딩페이지
-/design --minimal 노션 스타일 워크스페이스
-/design --brutal 실시간 모니터링 대시보드
+# Presets (by style name)
+/design --soft SaaS landing page
+/design --minimal Notion-style workspace
+/design --brutal Real-time monitoring dashboard
 
-# 프리셋 (용도명) — 더 직관적
-/design --landing SaaS 랜딩페이지
-/design --dashboard 실시간 모니터링
-/design --workspace 팀 협업 도구
-/design --portfolio 디자이너 포트폴리오
-/design --admin 관리자 패널
+# Presets (by use case) — more intuitive
+/design --landing SaaS landing page
+/design --dashboard Real-time monitoring
+/design --workspace Team collaboration tool
+/design --portfolio Designer portfolio
+/design --admin Admin panel
 
-# 커스텀 다이얼
-/design --v 2 --m 3 --d 9 관리자 대시보드
-/design --v 8 --m 7 --d 2 럭셔리 브랜드 랜딩
+# Custom dials
+/design --v 2 --m 3 --d 9 Admin dashboard
+/design --v 8 --m 7 --d 2 Luxury brand landing
 
-# 리디자인
-/design --redesign 이 프로젝트 디자인 업그레이드
+# Redesign
+/design --redesign Upgrade this project's design
 
-# 조합
-/design --landing --output-guard 랜딩페이지 (코드 완전 출력)
+# Combinations
+/design --landing --output-guard Landing page (full code output)
 ```
 
-## 의존성
+## Dependencies
 
-[taste-skill](https://github.com/Leonxlnx/taste-skill) 플러그인이 설치되어 있어야 전체 기능이 작동한다.
-없으면 기본 디자인 규칙과 3-다이얼 시스템은 적용되지만, 프리셋별 상세 규칙은 축소된다.
+The [taste-skill](https://github.com/Leonxlnx/taste-skill) plugin must be installed for full functionality.
+Without it, base design rules and the 3-dial system still apply, but per-preset detailed rules are reduced.
