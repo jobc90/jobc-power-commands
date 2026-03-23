@@ -1,0 +1,6 @@
+interface:
+  display_name: "Super"
+  short_description: "Drive idea-to-delivery workflows in Codex"
+  default_prompt: "Use $super to turn this idea into a plan, implementation, review, and release-ready handoff."
+policy:
+  allow_implicit_invocation: true

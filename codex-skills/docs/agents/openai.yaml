@@ -1,0 +1,6 @@
+interface:
+  display_name: "Docs"
+  short_description: "Auto-detect doc type and produce structured documentation"
+  default_prompt: "Use $docs to analyze the request, select the right documentation template, research sources, and produce professional documentation."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Cowork"
+  short_description: "Plan and parallelize large code changes safely"
+  default_prompt: "Use $cowork to break this task into safe work slices and coordinate parallel implementation."
+policy:
+  allow_implicit_invocation: true
