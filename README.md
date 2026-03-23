@@ -18,13 +18,88 @@
 
 ### 언제 뭘 쓸까?
 
-| 상황 | 커맨드 | 예시 |
-|------|--------|------|
-| 코드 다 짰고, 커밋하기 전 | `/check` | `/check --pr` |
-| 파일 5개 이상 동시 수정 | `/cowork` | `/cowork 결제 환불 기능 추가` |
-| 새 기능을 처음부터 끝까지 | `/super` | `/super 로그인에 2FA 추가` |
-| 문서 작성/갱신/정리 | `/docs` | `/docs 프로젝트 전체 문서화` |
-| 프론트엔드 UI 만들기 | `/design` | `/design --soft SaaS 랜딩페이지` |
+#### /check — 코드 다 짰고, 커밋하기 전
+
+```bash
+/check                          # 리뷰 → 수정 → 검증 → 커밋 → 푸시
+/check --dry-run                # 리뷰만 보기 (수정/커밋 안 함)
+/check --pr                     # 푸시 후 GitHub PR까지 생성
+```
+
+#### /cowork — 큰 작업을 팀으로 나눠서
+
+```bash
+/cowork 결제 모듈에 환불 기능 추가
+/cowork --agents 4 대규모 리팩토링     # 에이전트 4명 동시 투입
+```
+
+#### /super — 아이디어 하나로 끝까지
+
+```bash
+# 기본: 기획 → 구현 → 리뷰 → 배포
+/super 로그인에 2FA 추가
+/super --pr 결제 모듈 리팩토링
+
+# 기획서가 이미 있을 때
+/super --skip-discover PRD가 이미 있으니 Plan부터
+
+# 디자인까지 포함해서 서비스 구현 (가장 강력)
+/super --design soft 기획서와 design.md를 읽고 서비스 전체 구현
+/super --design dashboard --pr 관리자 대시보드 구현 후 PR까지
+
+# design.md가 프로젝트에 있으면 자동 감지 (플래그 불필요)
+/super 서비스 전체 구현해줘
+```
+
+#### /docs — 문서 작성/갱신/정리
+
+```bash
+/docs 이 프로젝트 README 작성해줘
+/docs --type prd 결제 모듈 기능 기획
+/docs 지난 회의 트랜스크립트 정리해줘
+/docs --dry-run 아키텍처 문서 구조만 잡아줘
+/docs 프로젝트 전체 문서화
+```
+
+#### /design — 프론트엔드 디자인
+
+```bash
+# 디자인 시스템 생성 (최초 1회)
+/design init                             # 프로젝트 분석 → design.md 생성
+
+# 용도별로 바로 사용
+/design --landing SaaS 랜딩페이지         # 에이전시급 프리미엄
+/design --dashboard 실시간 모니터링        # 대시보드/터미널
+/design --workspace 팀 협업 도구          # 미니멀 에디토리얼
+/design --admin 관리자 패널               # 빽빽한 데이터 UI
+
+# 커스텀 다이얼로 세밀하게
+/design --v 8 --m 7 --d 2 럭셔리 브랜드 랜딩
+
+# 기존 프로젝트 디자인 업그레이드
+/design init                             # "더 화려하게" → design.md 업데이트
+/design --redesign 디자인 리팩토링
+
+# /super와 연동 (가장 편한 방법)
+/design init                             # design.md 생성
+/super 서비스 구현해줘                     # design.md 자동 감지 → 디자인 적용
+```
+
+#### 추천 워크플로우
+
+```bash
+# 새 서비스 처음부터 끝까지
+/design init                    # Step 1: 디자인 시스템 정의
+/super 기획서 읽고 구현해줘       # Step 2: 기획→구현→리뷰→배포 (디자인 자동 적용)
+
+# 기존 서비스 디자인 리뉴얼
+/design init                    # Step 1: 현재 디자인 분석 → 목표 설정
+/super 디자인 리팩토링해줘        # Step 2: 디자인만 변경 (기능 유지)
+
+# 빠른 기능 추가 후 커밋
+(코딩 완료 후)
+/check --pr                     # 리뷰→수정→검증→PR 한 번에
+```
 
 ### Codex 버전
 
