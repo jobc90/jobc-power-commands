@@ -46,6 +46,27 @@ Prohibited: modifying files outside scope, breaking existing tests, importing un
 ```
 After Wave 1 completes, invoke Wave 2 agents **simultaneously in a single message**.
 
+#### Model Selection Hint
+Choose agent model based on task complexity:
+- 1-2 file mechanical tasks with clear spec → `haiku` (fast, cheap)
+- Multi-file integration or pattern matching → `sonnet` (standard)
+- Architecture decisions or broad codebase judgment → `opus` (capable)
+
+#### Worker Status Handling
+When a worker returns, check its status before proceeding:
+- **DONE** → proceed to consolidation
+- **DONE_WITH_CONCERNS** → read concerns; address correctness/scope issues before consolidation
+- **NEEDS_CONTEXT** → provide missing context and re-dispatch
+- **BLOCKED** → assess blocker: provide more context, re-scope the slice, or escalate to user
+
+### Phase 3.5: Per-Slice Review
+Before final integration, spot-check each returned slice:
+1. Does the diff match the assigned success criteria? (spec compliance)
+2. Are there changes outside the owned file set? (ownership violation)
+3. Any obvious quality issues? (quick sanity check)
+
+If a slice fails review, send fix instructions to the responsible agent via SendMessage.
+
 ### Phase 4: Consolidate
 1. Check conflicts with `git diff`
 2. Verify import consistency + type coherence

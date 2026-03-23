@@ -118,6 +118,12 @@ Choose the implementation mode that fits the task:
 - larger work with clean ownership boundaries and explicit delegation permission -> use the `$cowork` workflow
 - frontend or UI-heavy work with design mode -> route through `$design` first, then build under those rules
 
+When tests exist or can be written, follow TDD discipline per slice:
+
+- Write or update tests first (RED)
+- Implement to pass (GREEN)
+- Verify coverage meets project standard
+
 Gate:
 
 - Do not dispatch subagents unless the user explicitly asked for delegation or parallel execution, or explicitly invoked `$cowork`.

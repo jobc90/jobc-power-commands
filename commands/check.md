@@ -1,15 +1,17 @@
 ---
-description: "5-angle parallel code review (quality/simplification/silent-failure/type/security) → auto-fix CRITICAL/HIGH → build+lint+test verification → commit+push. Supports --dry-run, --pr."
+description: "5-angle parallel code review (quality/simplification/silent-failure/type/security) → auto-fix CRITICAL/HIGH → build+lint+test verification → report next step. Git actions opt-in via --commit, --push, --pr. Supports --dry-run."
 ---
 
-# /check — Parallel Code Review + Fix + Verify + Deploy
+# /check — Parallel Code Review + Fix + Verify
 
-Review changed code from 5 angles simultaneously, auto-fix issues, verify, and deploy.
+Review changed code from 5 angles simultaneously, auto-fix issues, and verify. Git actions are opt-in.
 
 ## Arguments
 - `--dry-run`: Run review only, no fix/commit
-- `--pr`: Create PR after push
-- (default): Review → Fix → Verify → Commit → Push
+- `--commit`: Commit after verification
+- `--push`: Commit if needed, then push
+- `--pr`: Commit, push, and create PR
+- (default): Review → Fix → Verify → Report next safe git step
 
 ## Execution
 
@@ -18,15 +20,17 @@ Review changed code from 5 angles simultaneously, auto-fix issues, verify, and d
 
 ### 2. Parallel Review (5 agents invoked simultaneously)
 
-Invoke all 5 agents in a single message:
+Invoke 4 specialized agents + 1 security-focused general agent in a single message:
 
-| Agent | Role | Output |
-|-------|------|--------|
-| **code-reviewer** (pr-review-toolkit) | Quality: naming, DRY, complexity, error handling | `{file, line, severity, fix}[]` |
-| **code-simplifier** (pr-review-toolkit) | Simplification: unnecessary abstraction, duplication, simpler alternatives | `{file, before, after}[]` |
-| **silent-failure-hunter** (pr-review-toolkit) | Silent failures: empty catch, ignored return values, unhandled errors | `{file, line, risk}[]` |
-| **type-design-analyzer** (pr-review-toolkit) | Types: unsafe as/any, missing generics, weak types | `{file, line, fix}[]` |
-| **security-review** | Security: CWE Top 25 + STRIDE threats | `{file, cwe, severity, fix}[]` |
+| Agent | Type | Role | Output |
+|-------|------|------|--------|
+| **code-reviewer** | built-in subagent | Quality: naming, DRY, complexity, error handling | `{file, line, severity, fix}[]` |
+| **code-simplifier** | built-in subagent | Simplification: unnecessary abstraction, duplication, simpler alternatives | `{file, before, after}[]` |
+| **silent-failure-hunter** | built-in subagent | Silent failures: empty catch, ignored return values, unhandled errors | `{file, line, risk}[]` |
+| **type-design-analyzer** | built-in subagent | Types: unsafe as/any, missing generics, weak types | `{file, line, fix}[]` |
+| **security** | general-purpose agent with security prompt | Security: CWE Top 25 + STRIDE threats, injection vectors, hardcoded secrets, auth gaps, sensitive data exposure | `{file, cwe, severity, fix}[]` |
+
+Note: The first 4 are dedicated Agent subtypes. The 5th (security) uses a general-purpose agent dispatched with a focused security review prompt covering the project's security-checklist rules.
 
 ### 3. Auto-Fix
 CRITICAL/HIGH → Fix with Edit tool. MEDIUM → Report only. LOW → Ignore.
@@ -46,10 +50,14 @@ pyproject.toml → ruff check, pytest
 Skip any step if the command or config is not present.
 On failure: auto-fix → re-verify (max 3 attempts). 3 failures → abort.
 
-### 5. Deploy
-`git add` → `git commit -m "<type>: <desc>"` → `git push`.
-With `--pr`: `gh pr create`.
-With `--dry-run`: output review results only.
+### 5. Git Handoff (opt-in)
+Git actions require explicit flags. Do not commit, push, or create PRs unless the user passed the corresponding flag.
+
+- **Default**: Report verified state and recommend the next safe git step. Do not touch git.
+- `--dry-run`: Output review results only. Do not fix, commit, or push.
+- `--commit`: `git add` relevant files → `git commit -m "<type>: <desc>"`.
+- `--push`: Commit first if needed → `git push`.
+- `--pr`: Commit and push → `gh pr create`.
 
 ## Abort Conditions
 - Hardcoded secrets / SQL injection detected → abort immediately

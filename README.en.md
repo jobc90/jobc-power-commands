@@ -11,7 +11,7 @@ Run code review, team orchestration, large-scale automation, structured document
 ## At a Glance
 
 ```
-/check  — Done coding → review → fix → verify → commit → push (5 min)
+/check  — Done coding → review → fix → verify → report next step (5 min)
 /cowork — Big task → distribute to agent team → parallel implementation → merge → verify (15 min)
 /super  — Idea → plan → implement → review → deploy → document (30 min+)
 /docs   — Auto-detect doc type → research → structure → write → proofread (10 min)
@@ -20,12 +20,14 @@ Run code review, team orchestration, large-scale automation, structured document
 
 ### When to Use What?
 
-#### /check — Code is done, before committing
+#### /check — Code is done, time to review and verify
 
 ```bash
-/check                          # Review → fix → verify → commit → push
+/check                          # Review → fix → verify → report next step
 /check --dry-run                # Review only (no fix/commit)
-/check --pr                     # Push and create a GitHub PR
+/check --commit                 # Commit after verification
+/check --push                   # Commit + push after verification
+/check --pr                     # Commit + push + create a GitHub PR
 ```
 
 #### /cowork — Split a big task across a team
@@ -122,32 +124,34 @@ Use $design ...
 
 ---
 
-## /check — Parallel Code Review + Auto-fix + Deploy
+## /check — Parallel Code Review + Auto-fix + Verify
 
-Your changed code is reviewed by **5 agents simultaneously**. CRITICAL/HIGH issues are auto-fixed, then build verification runs before commit+push.
+Your changed code is reviewed by **5 agents simultaneously**. CRITICAL/HIGH issues are auto-fixed, then build verification runs. Git actions (commit/push/PR) are opt-in via explicit flags.
 
-### 5 Agents
+### 5 Review Agents
 
-| Agent | Review Area |
-|-------|------------|
-| code-reviewer | Naming, DRY, complexity, error handling |
-| code-simplifier | Unnecessary abstractions, duplicate logic, simpler alternatives |
-| silent-failure-hunter | Empty catches, ignored return values, unhandled Promises |
-| type-design-analyzer | Unsafe `as`/`any`, missing generics, weak types |
-| security-review | CWE Top 25 + STRIDE threat modeling |
+| Agent | Type | Review Area |
+|-------|------|------------|
+| code-reviewer | built-in subagent | Naming, DRY, complexity, error handling |
+| code-simplifier | built-in subagent | Unnecessary abstractions, duplicate logic, simpler alternatives |
+| silent-failure-hunter | built-in subagent | Empty catches, ignored return values, unhandled Promises |
+| type-design-analyzer | built-in subagent | Unsafe `as`/`any`, missing generics, weak types |
+| security | general-purpose (security prompt) | CWE Top 25 + STRIDE threat modeling |
 
 ### Execution Flow
 
 ```
-Collect changed files → 5 agents review in parallel → auto-fix → build+lint+test → commit → push
+Collect changed files → 5 agents review in parallel → auto-fix → build+lint+test → report verified state
 ```
 
 ### Usage
 
 ```bash
-/check              # Review → fix → verify → commit → push
+/check              # Review → fix → verify → report next step
 /check --dry-run    # Review results only (no fix/commit)
-/check --pr         # Push and create a GitHub PR
+/check --commit     # Commit after verification
+/check --push       # Commit + push after verification
+/check --pr         # Commit + push + create a GitHub PR
 ```
 
 ---
@@ -158,13 +162,14 @@ A Conductor analyzes the codebase and distributes work across agent teams.
 
 **Core rule:** The Conductor writes zero lines of code. Recon → plan → distribute → merge → verify only.
 
-### 5-Phase Execution
+### 6-Phase Execution
 
 | Phase | Role | Tools/Commands Used |
 |-------|------|---------------------|
 | **1. Recon** | Understand codebase structure | Explore agent + code-architect |
 | **2. Plan** | Split work into independent units | PM commands (/write-prd, /write-stories, /test-scenarios) |
-| **3. Distribute** | Invoke agents in parallel per Wave | Agent tool parallel execution |
+| **3. Distribute** | Invoke agents per Wave + model selection | Agent tool parallel execution (haiku/sonnet/opus per task) |
+| **3.5 Slice Review** | Verify each worker's spec compliance + ownership | Diff check + fix instructions |
 | **4. Merge** | Check conflicts + integrate | git diff + Edit |
 | **5. Verify** | Build + lint + test | Auto-detected build system |
 
@@ -197,7 +202,7 @@ From a one-liner idea to deployment. A full pipeline combining `/cowork` (parall
 |-------|------|---------------------|
 | **DISCOVER** | Structure requirements | /write-prd, /write-stories, /pre-mortem, /strategy |
 | **PLAN** | Implementation plan + task breakdown + collect design.md | Explore, code-architect, /prioritize-features, /test-scenarios |
-| **BUILD** | Parallel implementation (/cowork + /design integration) | Agent Teams, Wave distribution, design rule injection |
+| **BUILD** | Parallel implementation (/cowork + /design + TDD) | Agent Teams, Wave distribution, design rule injection, RED→GREEN verification |
 | **CHECK** | 5-angle review + design quality check | 5+1 agent review, build/lint/test |
 | **SHIP** | Commit + push + PR | git, gh CLI |
 | **DOCUMENT** | Release notes + doc updates | /sprint, /revise-claude-md, /sync-docs |
@@ -434,11 +439,11 @@ claudex-power-commands/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin manifest
 ├── commands/
-│   ├── check.md             # /check (46 lines)
-│   ├── cowork.md            # /cowork (56 lines)
+│   ├── check.md             # /check (64 lines)
+│   ├── cowork.md            # /cowork (77 lines)
 │   ├── design.md            # /design (334 lines)
 │   ├── docs.md              # /docs (206 lines)
-│   └── super.md             # /super (192 lines)
+│   └── super.md             # /super (196 lines)
 ├── codex-skills/
 │   ├── check/
 │   │   ├── SKILL.md            # Codex skill definition

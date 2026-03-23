@@ -11,7 +11,7 @@
 ## 한눈에 보기
 
 ```
-/check  — 코드 작성 끝 → 리뷰 → 수정 → 검증 → 커밋 → 푸시 (5분)
+/check  — 코드 작성 끝 → 리뷰 → 수정 → 검증 → 다음 단계 안내 (5분)
 /cowork — 큰 작업 → 에이전트 팀 분배 → 병렬 구현 → 취합 → 검증 (15분)
 /super  — 아이디어 → 기획 → 구현 → 리뷰 → 배포 → 문서화 (30분+)
 /docs   — 문서 유형 자동 판별 → 리서치 → 구조화 → 작성 → 검수 (10분)
@@ -20,12 +20,14 @@
 
 ### 언제 뭘 쓸까?
 
-#### /check — 코드 다 짰고, 커밋하기 전
+#### /check — 코드 다 짰고, 리뷰+검증 받고 싶을 때
 
 ```bash
-/check                          # 리뷰 → 수정 → 검증 → 커밋 → 푸시
+/check                          # 리뷰 → 수정 → 검증 → 다음 단계 안내
 /check --dry-run                # 리뷰만 보기 (수정/커밋 안 함)
-/check --pr                     # 푸시 후 GitHub PR까지 생성
+/check --commit                 # 검증 후 커밋
+/check --push                   # 검증 후 커밋+푸시
+/check --pr                     # 검증 후 커밋+푸시+GitHub PR 생성
 ```
 
 #### /cowork — 큰 작업을 팀으로 나눠서
@@ -122,32 +124,34 @@ Use $design ...
 
 ---
 
-## /check — 병렬 코드 리뷰 + 자동 수정 + 배포
+## /check — 병렬 코드 리뷰 + 자동 수정 + 검증
 
-변경 코드를 **5개 에이전트가 동시에** 리뷰합니다. CRITICAL/HIGH 이슈는 자동 수정하고, 빌드 검증 후 커밋+푸시합니다.
+변경 코드를 **5개 에이전트가 동시에** 리뷰합니다. CRITICAL/HIGH 이슈는 자동 수정하고, 빌드 검증 후 다음 단계를 안내합니다. Git 액션(커밋/푸시/PR)은 명시적 플래그가 있을 때만 실행합니다.
 
-### 5개 에이전트
+### 5개 리뷰 에이전트
 
-| 에이전트 | 검사 영역 |
-|---------|---------|
-| code-reviewer | 네이밍, DRY, 복잡도, 에러 핸들링 |
-| code-simplifier | 불필요한 추상화, 중복 로직, 더 단순한 대안 |
-| silent-failure-hunter | 빈 catch, 무시된 반환값, 미처리 Promise |
-| type-design-analyzer | 불안전 `as`/`any`, 누락 제네릭, 약한 타입 |
-| security-review | CWE Top 25 + STRIDE 위협 모델링 |
+| 에이전트 | 유형 | 검사 영역 |
+|---------|------|---------|
+| code-reviewer | built-in subagent | 네이밍, DRY, 복잡도, 에러 핸들링 |
+| code-simplifier | built-in subagent | 불필요한 추상화, 중복 로직, 더 단순한 대안 |
+| silent-failure-hunter | built-in subagent | 빈 catch, 무시된 반환값, 미처리 Promise |
+| type-design-analyzer | built-in subagent | 불안전 `as`/`any`, 누락 제네릭, 약한 타입 |
+| security | general-purpose (보안 프롬프트) | CWE Top 25 + STRIDE 위협 모델링 |
 
 ### 실행 흐름
 
 ```
-변경 파일 수집 → 5 에이전트 동시 리뷰 → 자동 수정 → 빌드+린트+테스트 → 커밋 → 푸시
+변경 파일 수집 → 5 에이전트 동시 리뷰 → 자동 수정 → 빌드+린트+테스트 → 검증 결과 보고
 ```
 
 ### 사용법
 
 ```bash
-/check              # 리뷰 → 수정 → 검증 → 커밋 → 푸시
+/check              # 리뷰 → 수정 → 검증 → 다음 단계 안내
 /check --dry-run    # 리뷰 결과만 보기 (수정/커밋 안 함)
-/check --pr         # 푸시 후 GitHub PR도 생성
+/check --commit     # 검증 후 커밋
+/check --push       # 검증 후 커밋+푸시
+/check --pr         # 검증 후 커밋+푸시+GitHub PR 생성
 ```
 
 ---
@@ -158,13 +162,14 @@ Use $design ...
 
 **핵심 규칙:** 지휘자는 코드를 한 줄도 쓰지 않습니다. 정찰 → 계획 → 분배 → 취합 → 검증만.
 
-### 5단계 실행
+### 6단계 실행
 
 | Phase | 역할 | 활용 커맨드/도구 |
 |-------|------|----------------|
 | **1. 정찰** | 코드베이스 구조 파악 | Explore 에이전트 + code-architect |
 | **2. 계획** | 작업을 독립 단위로 분할 | PM 커맨드 (/write-prd, /write-stories, /test-scenarios) |
-| **3. 분배** | Wave별 에이전트 동시 호출 | Agent 도구 병렬 실행 |
+| **3. 분배** | Wave별 에이전트 동시 호출 + 모델 선택 | Agent 도구 병렬 실행 (haiku/sonnet/opus 태스크별) |
+| **3.5 슬라이스 리뷰** | 각 워커 결과 spec 준수 + 소유권 검증 | diff 체크 + 수정 지시 |
 | **4. 취합** | 충돌 확인 + 병합 | git diff + Edit |
 | **5. 검증** | 빌드 + 린트 + 테스트 | 빌드 시스템 자동 감지 |
 
@@ -197,7 +202,7 @@ Wave 3 (순차): import 정리, 미사용 코드 제거
 |------|------|----------------|
 | **DISCOVER** | 요구사항 구조화 | /write-prd, /write-stories, /pre-mortem, /strategy |
 | **PLAN** | 구현 계획 + 작업 분할 + design.md 수집 | Explore, code-architect, /prioritize-features, /test-scenarios |
-| **BUILD** | 병렬 구현 (/cowork + /design 연동) | Agent Teams, Wave 분배, 디자인 규칙 주입 |
+| **BUILD** | 병렬 구현 (/cowork + /design + TDD 연동) | Agent Teams, Wave 분배, 디자인 규칙 주입, RED→GREEN 검증 |
 | **CHECK** | 5-angle 리뷰 + 디자인 품질 체크 | 5+1 에이전트 리뷰, 빌드/린트/테스트 |
 | **SHIP** | 커밋 + 푸시 + PR | git, gh CLI |
 | **DOCUMENT** | 릴리즈 노트 + 문서 갱신 | /sprint, /revise-claude-md, /sync-docs |
@@ -434,11 +439,11 @@ claudex-power-commands/
 ├── .claude-plugin/
 │   └── plugin.json          # 플러그인 매니페스트
 ├── commands/
-│   ├── check.md             # /check (46줄)
-│   ├── cowork.md            # /cowork (56줄)
+│   ├── check.md             # /check (64줄)
+│   ├── cowork.md            # /cowork (77줄)
 │   ├── design.md            # /design (334줄)
 │   ├── docs.md              # /docs (206줄)
-│   └── super.md             # /super (192줄)
+│   └── super.md             # /super (196줄)
 ├── codex-skills/
 │   ├── check/
 │   │   ├── SKILL.md            # Codex 스킬 정의

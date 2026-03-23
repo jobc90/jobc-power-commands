@@ -87,6 +87,33 @@ Do not:
 
 Use a small number of workers. Prefer 2-4 well-scoped tasks over many shallow tasks.
 
+#### Model Selection Hint
+
+Choose agent model based on task complexity:
+
+- 1-2 file mechanical tasks with clear spec -> fast model (haiku)
+- Multi-file integration or pattern matching -> standard model (sonnet)
+- Architecture decisions or broad codebase judgment -> capable model (opus)
+
+#### Worker Status Handling
+
+When a worker returns, check its status before proceeding:
+
+- **DONE** -> proceed to per-slice review
+- **DONE_WITH_CONCERNS** -> read concerns; address correctness or scope issues before review
+- **NEEDS_CONTEXT** -> provide missing context and re-dispatch
+- **BLOCKED** -> assess blocker: provide more context, re-scope the slice, or escalate to user
+
+### Phase 3.5. Per-Slice Review
+
+Before final integration, spot-check each returned slice:
+
+1. Does the diff match the assigned success criteria? (spec compliance)
+2. Are there changes outside the owned file set? (ownership violation)
+3. Any obvious quality issues? (quick sanity check)
+
+If a slice fails review, send fix instructions to the responsible worker and re-check after the fix.
+
 ### Phase 4. Integrate
 
 Review returned diffs before merging ideas together:

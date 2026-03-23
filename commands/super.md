@@ -95,6 +95,10 @@ Key points:
 - Wave 1 sequential → Wave 2 agents **invoked simultaneously in one message** → Wave 3 finalize
 - On conflict: conductor merges with Edit
 - On failure: SendMessage to the responsible agent for retry (max 3 attempts)
+- When tests exist or can be written, follow TDD discipline per slice:
+  - Write or update tests first (RED)
+  - Implement to pass (GREEN)
+  - Verify coverage meets project standard
 
 #### Additional BUILD Rules When Design Mode Is Active
 
