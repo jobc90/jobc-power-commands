@@ -1,6 +1,6 @@
 # Installed Plugin Catalog
 
-> 글로벌 설치된 외부 플러그인 전체 목록. Forge 업데이트 시 덮어쓰기되지 않음.
+> 글로벌 설치된 외부 플러그인 전체 목록.
 > 설치 경로: commands → `~/.claude/commands/`, agents → `~/.claude/agents/`, skills → `~/.claude/skills/`
 
 ---
@@ -241,18 +241,17 @@
 
 ## D. 라우팅 가이드
 
-### Forge 기본 vs 외부 플러그인 우선순위
+### jobc-power-commands vs 외부 플러그인 우선순위
 
-| 도메인 | Forge 기본 | 외부 플러그인 | 규칙 |
-|--------|-----------|-------------|------|
-| 코드 리뷰 | `/code-review` (Forge) | `/review-pr` (6 에이전트) | 간단→Forge, PR 심층→외부 |
-| 커밋/PR | `/commit-push-pr` (Forge) | `/commit` (Official) | Forge 우선 (검증 포함) |
-| 보안 | `/security-review` (Forge) | — | Forge 전용 |
-| 기능 개발 | `/plan`+`/tdd` (Forge) | `/feature-dev` (Official) | Forge 우선 (TDD 사이클) |
-| 플러그인 개발 | — | `/create-plugin` | 외부 전용 |
-| PM/전략 | — | PM Suite 전체 | 외부 전용 |
-| 데이터 분석 | — | `/analyze-test`, `/write-query` | 외부 전용 |
+| 도메인 | jobc-power-commands | 외부 플러그인 | 규칙 |
+|--------|-------------------|-------------|------|
+| 코드 리뷰 + 배포 | `/check` | `/review-pr` (Official) | /check 우선 (검증+배포 포함) |
+| 병렬 오케스트레이션 | `/cowork` | — | 자체 전용 |
+| 풀 파이프라인 | `/super` | `/feature-dev` (Official) | /super 우선 (디자인 연동) |
+| 문서화 | `/docs` | — | 자체 전용 |
+| 디자인 | `/design` | taste-skill 직접 사용 | /design 우선 (통합 진입점) |
+| PM/전략 | PM 커맨드 라우팅 | PM Suite 전체 | 외부 PM Suite 활용 |
 
 ### 중복 커맨드 충돌
 
-같은 이름 커맨드가 있으면 `~/.claude/commands/`의 마지막 복사본이 우선. Forge 버전 유지 시 외부 플러그인은 풀네임 스킬로 호출.
+같은 이름 커맨드가 있으면 `~/.claude/commands/`의 마지막 복사본이 우선.

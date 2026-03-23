@@ -6,9 +6,8 @@ MISSING=()
 
 # --- Helper: check if a plugin exists in cache or manual install ---
 check_plugin() {
-  local name="$1"
-  local cache_pattern="$2"
-  local manual_path="$3"
+  local cache_pattern="$1"
+  local manual_path="$2"
 
   # Check plugin cache
   if find ~/.claude/plugins/cache -path "*${cache_pattern}*" -name "*.md" -print -quit 2>/dev/null | grep -q .; then
@@ -24,25 +23,19 @@ check_plugin() {
 }
 
 # --- 1. taste-skill (for /design) ---
-if ! check_plugin "taste-skill" "taste-skill" "$HOME/.claude/skills/taste-skill/SKILL.md"; then
+if ! check_plugin "taste-skill" "$HOME/.claude/skills/taste-skill/SKILL.md"; then
   MISSING+=("taste-skill")
 fi
 
-# --- 2. Claude Forge (for /check verification, /plan, /tdd) ---
-if ! check_plugin "claude-forge" "claude-forge" "$HOME/.claude/commands/verify-loop.md"; then
-  MISSING+=("claude-forge")
-fi
-
-# --- 3. claude-plugins-official (for pr-review-toolkit, feature-dev) ---
-if ! check_plugin "claude-plugins-official" "claude-plugins-official" ""; then
-  # Also check for specific agents from this plugin
+# --- 2. claude-plugins-official (for pr-review-toolkit, feature-dev) ---
+if ! check_plugin "claude-plugins-official" ""; then
   if ! find ~/.claude/plugins/cache -path "*pr-review*" -print -quit 2>/dev/null | grep -q .; then
     MISSING+=("claude-plugins-official")
   fi
 fi
 
-# --- 4. pm-skills (for write-prd, write-stories, etc.) ---
-if ! check_plugin "pm-skills" "pm-skills" ""; then
+# --- 3. pm-skills (for write-prd, write-stories, etc.) ---
+if ! check_plugin "pm-skills" ""; then
   MISSING+=("pm-skills")
 fi
 
@@ -61,12 +54,8 @@ for plugin in "${MISSING[@]}"; do
       echo "  taste-skill (/design 프리셋 상세 규칙)"
       echo "    claude plugin install --git https://github.com/Leonxlnx/taste-skill"
       ;;
-    claude-forge)
-      echo "  Claude Forge (/check 검증, /plan, /tdd, /sync-docs)"
-      echo "    claude plugin install --git https://github.com/sangrokjung/claude-forge"
-      ;;
     claude-plugins-official)
-      echo "  claude-plugins-official (/check 6-에이전트 리뷰, feature-dev)"
+      echo "  claude-plugins-official (/check 4-에이전트 리뷰, feature-dev)"
       echo "    claude plugin install --git https://github.com/anthropics/claude-plugins-official"
       ;;
     pm-skills)

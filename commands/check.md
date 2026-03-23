@@ -26,11 +26,11 @@ description: "5-angle 병렬 코드 리뷰(품질/간결화/무음실패/타입/
 | **code-simplifier** (pr-review-toolkit) | 간결화: 불필요 추상화, 중복, 더 단순한 대안 | `{file, before, after}[]` |
 | **silent-failure-hunter** (pr-review-toolkit) | 무음 실패: 빈 catch, 무시된 반환값, 미처리 에러 | `{file, line, risk}[]` |
 | **type-design-analyzer** (pr-review-toolkit) | 타입: 불안전 as/any, 누락 제네릭, 약한 타입 | `{file, line, fix}[]` |
-| **security-review** (Forge) | 보안: CWE Top 25 + STRIDE 위협 | `{file, cwe, severity, fix}[]` |
+| **security-review** | 보안: CWE Top 25 + STRIDE 위협 | `{file, cwe, severity, fix}[]` |
 
 ### 3. 자동 수정
 CRITICAL/HIGH → Edit 도구로 수정. MEDIUM → 보고만. LOW → 무시.
-수정 범위: 해당 줄만. 주변 코드 건드리지 않음 (golden-principles: surgical changes).
+수정 범위: 해당 줄만. 주변 코드 건드리지 않음 (surgical changes 원칙).
 
 ### 4. 검증
 `pnpm build` → `pnpm lint` → `pnpm test` (없으면 skip).

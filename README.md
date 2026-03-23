@@ -341,7 +341,6 @@ cp -R codex-skills/design "${CODEX_HOME:-$HOME/.codex}/skills/"
 
 | 플러그인 | 필수 여부 | 역할 | 없으면? |
 |---------|---------|------|--------|
-| [Claude Forge](https://github.com/sangrokjung/claude-forge) | 권장 | verification-engine, /plan, /tdd, /sync-docs | 기본 빌드/테스트로 대체 |
 | [claude-plugins-official](https://github.com/anthropics/claude-plugins-official) | 권장 | pr-review-toolkit (4 리뷰 에이전트), feature-dev, code-simplifier | /check 리뷰 에이전트 감소 |
 | [pm-skills](https://github.com/phuryn/pm-skills) | 선택 | write-prd, write-stories, pre-mortem, test-scenarios, release-notes | PM 단계 생략, 바로 구현 |
 | [taste-skill](https://github.com/Leonxlnx/taste-skill) | /design 권장 | taste-skill, soft-skill, minimalist-skill, brutalist-skill, redesign-skill, output-skill | 공통 금지 패턴만 적용, 프리셋 상세 규칙 축소 |
@@ -377,9 +376,13 @@ jobc-power-commands/
 │       ├── SKILL.md
 │       └── agents/openai.yaml
 ├── hooks/
-│   └── check-deps.sh        # SessionStart: 권장 플러그인 4종 설치 여부 감지
+│   └── check-deps.sh        # SessionStart: 권장 플러그인 3종 설치 여부 감지
 ├── rules/
-│   └── plugins-catalog.md   # 설치된 플러그인 카탈로그 (참조용)
+│   ├── code-quality.md      # 코드 품질 원칙 (불변성, surgical changes, 검증)
+│   ├── git-conventions.md   # 커밋 포맷, PR 워크플로우
+│   ├── plugins-catalog.md   # 설치된 플러그인 카탈로그 (참조용)
+│   ├── security-checklist.md # 보안 체크리스트 (CWE, 시크릿, 인젝션)
+│   └── verification.md      # 검증 없이 완료 선언 금지, Red-Green 검증
 ├── README.md
 └── LICENSE
 ```
