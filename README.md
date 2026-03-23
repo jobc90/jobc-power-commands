@@ -120,7 +120,7 @@ Wave 3 (순차): import 정리, 미사용 코드 제거
 | **BUILD** | 병렬 구현 (/cowork 패턴) | Agent Teams, Wave 분배 |
 | **CHECK** | 병렬 리뷰 + 검증 (/check 패턴) | 5 에이전트 리뷰, 빌드/린트/테스트 |
 | **SHIP** | 커밋 + 푸시 + PR | git, gh CLI |
-| **DOCUMENT** | 릴리즈 노트 + 문서 갱신 | release-notes, revise-claude-md, sync-docs |
+| **DOCUMENT** | 릴리즈 노트 + 문서 갱신 | /sprint, /revise-claude-md, /sync-docs |
 
 ### 사용법
 
