@@ -9,6 +9,8 @@ description: Use when implementation is already in progress or finished and Code
 
 Run the Codex version of `/check`. This keeps the Claude workflow shape, but replaces Claude-only named reviewer agents with a built-in 5-angle review checklist, keeps git actions opt-in, and requires fresh verification evidence before any ship claim.
 
+This skill is self-contained. Do not assume external Forge rule files are available. Internalize verification, code-quality, security, and git conventions directly while reviewing the diff.
+
 ## Input Modes
 
 Treat these literal tokens in the user's prompt as workflow hints:
@@ -26,6 +28,7 @@ If no token is present but the request clearly means "review the current changes
 - Review the real diff first. Do not spend time on unchanged files.
 - Fix only issues you can defend with evidence.
 - Keep edits surgical and inside the existing change scope.
+- Validate external input and other trust boundaries instead of adding broad defensive code everywhere.
 - Do not commit, push, or open a PR unless the user explicitly requested that action.
 - Do not claim success without fresh verification output.
 
@@ -123,6 +126,7 @@ If verification still fails after 3 loops, stop and report the failure evidence.
 
 - Stage only the relevant files
 - Create one non-interactive commit after verification
+- Use a conventional commit prefix such as `fix:`, `feat:`, `docs:`, or `refactor:`
 
 ### `--push`
 
@@ -133,6 +137,7 @@ If verification still fails after 3 loops, stop and report the failure evidence.
 
 - Commit and push only after verification
 - Create a PR only if GitHub CLI is available and the user asked for it
+- Base the PR summary on the actual branch diff and verification evidence
 
 ## Stop Conditions
 

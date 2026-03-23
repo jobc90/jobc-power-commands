@@ -9,6 +9,8 @@ description: Use when the user wants an idea, feature request, or large change c
 
 Run the Codex version of `/super`. This is the end-to-end orchestrator that routes a request through discovery, planning, build, review, shipping, and documentation while preserving Codex's stricter git and verification rules.
 
+This skill is self-contained. Do not assume external Forge rules or helper plugins are present. Internalize the workflow using built-in standards for verification, code quality, security, and git handoff.
+
 ## Input Modes
 
 Treat these literal tokens in the user's prompt as workflow hints:
@@ -26,6 +28,15 @@ If the user gives a raw feature request that clearly means "take this from idea 
 ## Pipeline
 
 `DISCOVER -> PLAN -> BUILD -> CHECK -> SHIP -> DOCUMENT`
+
+## Built-In Standards
+
+Apply these rules throughout the pipeline:
+
+- Verification gate: do not claim success, ship, or hand off without fresh command output from this run. For bug fixes, prefer a real red-green verification path when practical.
+- Code quality: keep changes surgical, avoid mutation-heavy patterns unless the codebase clearly requires them, validate only at true system boundaries, and keep error handling explicit.
+- Security: stop on secrets, injection risk, auth gaps, or sensitive-data leakage. Treat security findings as ship blockers until resolved or explicitly deferred by the user.
+- Git conventions: keep git actions opt-in, use a conventional commit style such as `feat:` or `fix:`, and base PR summaries on the real branch diff rather than memory.
 
 ## Design Mode
 
@@ -85,6 +96,7 @@ Produce a concrete execution plan before touching code:
 - verification strategy
 - risk areas
 - whether the work is sequential or parallelizable
+- security-sensitive boundaries such as auth, secrets, file access, external input, or network calls
 
 For larger implementation work, break the plan into waves:
 
@@ -96,6 +108,7 @@ Gate:
 
 - If the work cannot be decomposed safely, plan for local sequential execution instead of forced delegation.
 - If design mode is active, attach the resolved design direction to every frontend slice in the plan.
+- If the verification strategy is still vague, do not leave PLAN yet.
 
 ### 3. BUILD
 
@@ -110,6 +123,7 @@ Gate:
 - Do not dispatch subagents unless the user explicitly asked for delegation or parallel execution, or explicitly invoked `$cowork`.
 - Do not move to CHECK until the requested behavior is implemented and locally integrated.
 - Do not let frontend slices ignore the selected design preset or detected design-system file.
+- Do not widen the scope with opportunistic refactors that are not required for the requested outcome.
 
 ### 4. CHECK
 
@@ -124,6 +138,7 @@ Gate:
 
 - Do not move to SHIP until verification evidence exists.
 - If verification fails 3 times, stop and report instead of pushing forward.
+- Treat unresolved security findings as release blockers.
 
 ### 5. SHIP
 
@@ -134,6 +149,12 @@ Git actions are opt-in, not automatic:
 - `--pr`: commit, push, and create a PR if possible
 
 Without an explicit shipping flag or explicit user instruction, stop at a verified ready-to-ship state and report the next safe git step.
+
+When committing or preparing a PR:
+
+- use a conventional commit format such as `feat:`, `fix:`, `docs:`, or `refactor:`
+- summarize what actually changed from the real diff
+- include the verification evidence that justifies shipping
 
 ### 6. DOCUMENT
 
@@ -154,6 +175,8 @@ Inside this workflow, prefer real installed skills and workflows:
 - Parallel build -> `$cowork`
 - Review and verification -> `$check`
 - Full documentation pass -> `$docs`
+
+These routes are additive helpers, not required external dependencies. If any route is unavailable, continue with the same standards inside the current session.
 
 ## Output Shape
 
