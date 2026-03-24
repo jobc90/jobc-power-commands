@@ -329,6 +329,16 @@ Auto-detects custom file names like `design.md`, `designsystem.md`, `BENEEDS_DES
 
 ## Installation
 
+### Plugin Manager (Recommended)
+
+```bash
+claude plugin install --git https://github.com/jobc90/claudex-power-commands
+```
+
+Success if `/check`, `/cowork`, `/super`, `/docs`, `/design` appear as slash commands in a new session.
+
+### Manual Installation
+
 ```bash
 # 1. Clone
 git clone https://github.com/jobc90/claudex-power-commands.git
@@ -336,7 +346,7 @@ git clone https://github.com/jobc90/claudex-power-commands.git
 # 2. Copy commands
 cp claudex-power-commands/commands/*.md ~/.claude/commands/
 
-# 3. (Optional) Copy plugin catalog rules
+# 3. (Optional) Copy rules
 cp claudex-power-commands/rules/*.md ~/.claude/rules/
 
 # 4. Verify — in a new session
@@ -391,9 +401,12 @@ Use $design init for this frontend project.
 ### Uninstallation
 
 ```bash
-# Claude Code
+# If installed via plugin manager (one-line clean removal)
+claude plugin uninstall claudex-power-commands
+
+# If installed manually
 rm ~/.claude/commands/{check,cowork,super,docs,design}.md
-rm ~/.claude/rules/plugins-catalog.md
+rm ~/.claude/rules/{code-quality,git-conventions,plugins-catalog,security-checklist,verification}.md
 
 # Codex
 rm -rf "${CODEX_HOME:-$HOME/.codex}"/skills/{check,cowork,super,docs,design}
@@ -402,9 +415,11 @@ rm -rf "${CODEX_HOME:-$HOME/.codex}"/skills/{check,cowork,super,docs,design}
 ### Updating
 
 ```bash
-cd claudex-power-commands && git pull
+# If installed via plugin manager
+claude plugin update claudex-power-commands
 
-# Claude Code
+# If installed manually
+cd claudex-power-commands && git pull
 cp commands/*.md ~/.claude/commands/
 cp rules/*.md ~/.claude/rules/
 

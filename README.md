@@ -329,6 +329,16 @@ DETECT → RESEARCH → STRUCTURE → DRAFT → REVIEW → DELIVER
 
 ## 설치
 
+### 플러그인 매니저 (권장)
+
+```bash
+claude plugin install --git https://github.com/jobc90/claudex-power-commands
+```
+
+새 세션에서 `/check`, `/cowork`, `/super`, `/docs`, `/design` 이 보이면 성공.
+
+### 수동 설치
+
 ```bash
 # 1. Clone
 git clone https://github.com/jobc90/claudex-power-commands.git
@@ -336,7 +346,7 @@ git clone https://github.com/jobc90/claudex-power-commands.git
 # 2. 커맨드 복사
 cp claudex-power-commands/commands/*.md ~/.claude/commands/
 
-# 3. (선택) 플러그인 카탈로그 규칙 복사
+# 3. (선택) 규칙 복사
 cp claudex-power-commands/rules/*.md ~/.claude/rules/
 
 # 4. 확인 — 새 세션에서
@@ -391,9 +401,12 @@ Use $design init for this frontend project.
 ### 삭제
 
 ```bash
-# Claude Code
+# 플러그인 매니저로 설치한 경우 (한 줄로 완전 제거)
+claude plugin uninstall claudex-power-commands
+
+# 수동 설치한 경우
 rm ~/.claude/commands/{check,cowork,super,docs,design}.md
-rm ~/.claude/rules/plugins-catalog.md
+rm ~/.claude/rules/{code-quality,git-conventions,plugins-catalog,security-checklist,verification}.md
 
 # Codex
 rm -rf "${CODEX_HOME:-$HOME/.codex}"/skills/{check,cowork,super,docs,design}
@@ -402,9 +415,11 @@ rm -rf "${CODEX_HOME:-$HOME/.codex}"/skills/{check,cowork,super,docs,design}
 ### 업데이트
 
 ```bash
-cd claudex-power-commands && git pull
+# 플러그인 매니저로 설치한 경우
+claude plugin update claudex-power-commands
 
-# Claude Code
+# 수동 설치한 경우
+cd claudex-power-commands && git pull
 cp commands/*.md ~/.claude/commands/
 cp rules/*.md ~/.claude/rules/
 
