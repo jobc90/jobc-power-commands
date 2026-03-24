@@ -4,7 +4,33 @@
 
 > [Claude Code](https://claude.ai/code)와 Codex에서 사용할 수 있는 파워 커맨드/스킬 5종
 
-코드 리뷰, 팀 오케스트레이션, 대규모 자동화, 체계적 문서화, 프론트엔드 디자인을 Claude Code 슬래시 커맨드와 Codex 스킬로 실행합니다.
+Claude Code용 slash command와 Codex용 skill을 따로 관리하는 수준이 아니라,
+실제로 같은 작업 흐름을 양쪽에서 거의 동일한 감각으로 돌릴 수 있게 맞춘 5종 세트입니다.
+
+이번에 특히 밀어붙인 부분은, 기존에 흩어져 있던 좋은 베이스들을 그냥 "가져다 붙인" 게 아니라
+실전에서 더 쓰기 쉬운 형태로 다시 재구성했다는 점입니다.
+
+taste-skill 기반 디자인 워크플로우를 /design 하나로 통합
+design.md 자동 감지 + /super --design 연동
+Superpowers/PM Skills 흐름을 Codex에서도 바로 쓰게 포팅
+검증/코드 품질/보안/git 규칙을 스킬 내부에 직접 내장
+git 액션은 opt-in으로 바꿔서 자동 커밋/푸시 사고 방지
+/super, /cowork, /docs 안에서 상황별 PM 스킬 자동 라우팅
+병렬 작업도 wave, ownership, verification 기준으로 통제
+즉, 베이스로 사용한
+
+taste-skill
+Superpowers Plugin (claude-plugins-official)
+PM Plugin Suite (pm-skills)
+의 장점은 살리고,
+실제로 써보면 불편했던
+
+툴마다 다른 사용감
+외부 규칙 의존
+과한 수동 스킬 선택
+자동 git 액션 불안정성
+같은 부분은 꽤 많이 줄였습니다.
+AI 코딩 툴을 "한두 개의 명령으로 안정적으로 굴리는 쪽"에 관심 있으면 한 번 보셔도 좋습니다.
 
 ---
 
