@@ -193,8 +193,8 @@ Use $harness-docs ...
 
 Codex 포트에는 아래 2개 스킬도 포함됩니다.
 
-- `harness`: `.harness/` 파일 기반으로 spec 작성 → 구현 → Playwright QA를 최대 3라운드 반복하는 자율 앱 빌드 스킬
-- `harness-docs`: `.harness-docs/` 파일 기반으로 research → draft → source-backed review를 최대 3라운드 반복하는 자율 문서 생성 스킬
+- `harness`: `.harness_codex/` 아래에 `prompt_codex.md`, `spec_codex.md`, `progress_codex.md` 등을 만들어 구현과 QA를 분리하는 자율 앱 빌드 스킬
+- `harness-docs`: `.harness-docs_codex/` 아래에 `request_codex.md`, `research_codex.md`, `draft_codex.md` 등을 만들어 문서 작성과 리뷰를 분리하는 자율 문서 생성 스킬
 
 ```text
 Use $harness to autonomously build a substantial application with planner, builder, and QA rounds.
@@ -565,8 +565,8 @@ Use $harness-docs to document this repository's architecture with research, writ
 - 검증 없는 완료 선언을 막기 위해 "검증 증거 없이 완료 선언 금지" 규칙을 기본 반영했다.
 - `docs`는 문서 작업에서 shell 사용을 최소화하고, 실제 설치된 Codex 스킬 이름(`create-prd`, `user-stories`, `release-notes` 등)에 맞춰 라우팅한다.
 - `design`은 taste-skill의 핵심 개념(프리셋, 3-다이얼, design.md 감지)을 Codex용 단일 스킬로 내재화했다.
-- `harness`는 `.harness/` 아티팩트와 `spawn_agent` 기반 Planner → Builder → QA 루프를 Codex 스킬로 옮긴 자율 앱 빌드 파이프라인이다.
-- `harness-docs`는 `.harness-docs/` 아티팩트와 Researcher → Writer → Reviewer 루프를 Codex 스킬로 옮긴 자율 문서화 파이프라인이다.
+- `harness`는 Claude용 `.harness/`와 충돌하지 않도록 `.harness_codex/`와 `_codex` 접미사 파일 아티팩트를 사용하는 Codex 전용 앱 빌드 파이프라인이다.
+- `harness-docs`는 Claude용 `.harness-docs/`와 충돌하지 않도록 `.harness-docs_codex/`와 `_codex` 접미사 파일 아티팩트를 사용하는 Codex 전용 문서화 파이프라인이다.
 
 ### 삭제
 

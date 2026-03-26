@@ -28,8 +28,8 @@ Examples:
 
 ## Inputs
 
-- **Draft**: `.harness-docs/draft.md`
-- **Research baseline**: `.harness-docs/research.md`
+- **Draft**: `.harness-docs_codex/draft_codex.md`
+- **Research baseline**: `.harness-docs_codex/research_codex.md`
 - **Original request**: from the task description
 - **Round number**: from the task description
 
@@ -85,7 +85,7 @@ Can the target reader understand and use it?
 
 ## Output
 
-Write the review to `.harness-docs/round-{N}-review.md` in this shape:
+Write the review to `.harness-docs_codex/round-{N}-review_codex.md` in this shape:
 
 ```markdown
 # Document Review - Round {N}

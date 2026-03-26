@@ -1,6 +1,6 @@
 ---
 name: harness-docs
-description: Autonomous documentation-building harness for `/harness-docs` or `$harness-docs` requests. Use when Codex needs to research a codebase, propose document scope, wait for user approval, draft documentation, fact-check it against source files, iterate up to 3 review rounds, and finalize the document through a file-based multi-agent loop in `.harness-docs/`.
+description: Autonomous documentation-building harness for `/harness-docs` or `$harness-docs` requests. Use when Codex needs to research a codebase, propose document scope, wait for user approval, draft documentation, fact-check it against source files, iterate up to 3 review rounds, and finalize the document through a file-based multi-agent loop in `.harness-docs_codex/`.
 ---
 
 # Harness Docs
@@ -36,14 +36,14 @@ In those cases, respond directly.
 
 ## Required Artifacts
 
-Use `.harness-docs/` in the target project directory.
+Use `.harness-docs_codex/` in the target project directory.
 
-- `.harness-docs/request.md`
-- `.harness-docs/research.md`
-- `.harness-docs/draft.md`
-- `.harness-docs/round-1-review.md`
-- `.harness-docs/round-2-review.md`
-- `.harness-docs/round-3-review.md`
+- `.harness-docs_codex/request_codex.md`
+- `.harness-docs_codex/research_codex.md`
+- `.harness-docs_codex/draft_codex.md`
+- `.harness-docs_codex/round-1-review_codex.md`
+- `.harness-docs_codex/round-2-review_codex.md`
+- `.harness-docs_codex/round-3-review_codex.md`
 
 All inter-agent communication must happen through these files only.
 
@@ -53,10 +53,10 @@ All inter-agent communication must happen through these files only.
 2. Create the working directory:
 
 ```bash
-mkdir -p .harness-docs
+mkdir -p .harness-docs_codex
 ```
 
-3. Write the user's request to `.harness-docs/request.md`, capturing:
+3. Write the user's request to `.harness-docs_codex/request_codex.md`, capturing:
    - requested document type
    - expected scope and depth
    - target audience when specified
@@ -71,11 +71,11 @@ Spawn a fresh research subagent:
 - keep `fork_context` false
 - pass only the researcher prompt template plus minimal local context
 - require the agent to explore the actual codebase
-- require the agent to write `.harness-docs/research.md`
+- require the agent to write `.harness-docs_codex/research_codex.md`
 
 After the researcher finishes:
 
-1. Read `.harness-docs/research.md`.
+1. Read `.harness-docs_codex/research_codex.md`.
 2. Present a scope summary to the user:
    - project name and type
    - key areas discovered
@@ -99,10 +99,10 @@ For each round `N` in `1..3`, spawn a fresh writer subagent.
 
 Writer instructions must include:
 
-- research baseline: `.harness-docs/research.md`
+- research baseline: `.harness-docs_codex/research_codex.md`
 - user's original request
-- if round 1: write the full draft to `.harness-docs/draft.md`
-- if round 2 or 3: read `.harness-docs/round-{N-1}-review.md` and address every issue in `.harness-docs/draft.md`
+- if round 1: write the full draft to `.harness-docs_codex/draft_codex.md`
+- if round 2 or 3: read `.harness-docs_codex/round-{N-1}-review_codex.md` and address every issue in `.harness-docs_codex/draft_codex.md`
 - source code may be read directly to fill verified gaps
 
 ### 3b. Review
@@ -111,11 +111,11 @@ Spawn a fresh reviewer subagent.
 
 Reviewer instructions must include:
 
-- draft path: `.harness-docs/draft.md`
-- research baseline: `.harness-docs/research.md`
+- draft path: `.harness-docs_codex/draft_codex.md`
+- research baseline: `.harness-docs_codex/research_codex.md`
 - original user request
 - round number
-- output path: `.harness-docs/round-{N}-review.md`
+- output path: `.harness-docs_codex/round-{N}-review_codex.md`
 - mandatory fact-checking against real source files and config files
 
 The reviewer cannot rely on the draft alone.
@@ -124,7 +124,7 @@ The reviewer cannot rely on the draft alone.
 
 After the reviewer finishes:
 
-1. Read `.harness-docs/round-{N}-review.md`.
+1. Read `.harness-docs_codex/round-{N}-review_codex.md`.
 2. Extract scores for:
    - Completeness
    - Accuracy
@@ -144,11 +144,11 @@ After the reviewer finishes:
 
 After the loop ends:
 
-1. Read the final `.harness-docs/draft.md`.
+1. Read the final `.harness-docs_codex/draft_codex.md`.
 2. Ask the user where to save it if no path was specified.
 3. Default to project root or `docs/` when the user has not chosen a destination.
 4. Copy or move the final document to the chosen path.
-5. Keep or remove `.harness-docs/` only if the user explicitly requests cleanup.
+5. Keep or remove `.harness-docs_codex/` only if the user explicitly requests cleanup.
 
 ## Phase 5. Summary
 
@@ -174,15 +174,15 @@ Present the final result in this shape:
 - Source files referenced: X
 
 ### Artifacts
-- Research: `.harness-docs/research.md`
+- Research: `.harness-docs_codex/research_codex.md`
 - Final document: `{final path}`
-- Last review: `.harness-docs/round-{N}-review.md`
+- Last review: `.harness-docs_codex/round-{N}-review_codex.md`
 ```
 
 ## Execution Rules
 
 1. Each phase agent must be a separate `spawn_agent` call with fresh context.
-2. Never pass state between agents in chat. Use `.harness-docs/` files only.
+2. Never pass state between agents in chat. Use `.harness-docs_codex/` files only.
 3. Always load the prompt templates from `references/` before composing each agent task.
 4. Always wait for explicit user approval after the research phase.
 5. The reviewer must fact-check against actual files, not just read the draft.

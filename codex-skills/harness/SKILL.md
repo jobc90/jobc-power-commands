@@ -1,6 +1,6 @@
 ---
 name: harness
-description: "Autonomous application-building harness for `/harness` or `$harness` requests. Use when Codex needs to turn a product idea into a working app through a file-based multi-agent loop: create `.harness/`, write a product spec, wait for user approval, implement the app, run Playwright-based QA, iterate up to 3 rounds, and deliver a final build summary."
+description: "Autonomous application-building harness for `/harness` or `$harness` requests. Use when Codex needs to turn a product idea into a working app through a file-based multi-agent loop: create `.harness_codex/`, write a product spec, wait for user approval, implement the app, run Playwright-based QA, iterate up to 3 rounds, and deliver a final build summary."
 ---
 
 # Harness
@@ -28,14 +28,14 @@ In those cases, respond directly instead of executing the harness workflow.
 
 ## Required Artifacts
 
-Use `.harness/` in the target project directory.
+Use `.harness_codex/` in the target project directory.
 
-- `.harness/prompt.md`
-- `.harness/spec.md`
-- `.harness/progress.md`
-- `.harness/round-1-feedback.md`
-- `.harness/round-2-feedback.md`
-- `.harness/round-3-feedback.md`
+- `.harness_codex/prompt_codex.md`
+- `.harness_codex/spec_codex.md`
+- `.harness_codex/progress_codex.md`
+- `.harness_codex/round-1-feedback_codex.md`
+- `.harness_codex/round-2-feedback_codex.md`
+- `.harness_codex/round-3-feedback_codex.md`
 
 All inter-agent communication must happen through these files only.
 
@@ -45,11 +45,11 @@ All inter-agent communication must happen through these files only.
 2. Create the working directory and initialize git if needed:
 
 ```bash
-mkdir -p .harness
+mkdir -p .harness_codex
 git init 2>/dev/null || true
 ```
 
-3. Write the user's original request to `.harness/prompt.md`.
+3. Write the user's original request to `.harness_codex/prompt_codex.md`.
 4. If the request implies a long-running autonomous build, warn the user that the full loop may take hours and consume significant tokens.
 
 ## Phase 2. Planning
@@ -61,12 +61,12 @@ Spawn a fresh subagent for planning:
 - use `spawn_agent`
 - keep `fork_context` false
 - pass only the planner prompt template plus the minimal task-local context
-- require the planner to read `.harness/prompt.md`
-- require the planner to write the final output to `.harness/spec.md`
+- require the planner to read `.harness_codex/prompt_codex.md`
+- require the planner to write the final output to `.harness_codex/spec_codex.md`
 
 After the planner finishes:
 
-1. Read `.harness/spec.md`.
+1. Read `.harness_codex/spec_codex.md`.
 2. Summarize the spec for the user:
    - feature count
    - key features
@@ -90,12 +90,12 @@ For each round `N` in `1..3`, spawn a fresh builder subagent.
 
 Builder instructions must include:
 
-- read `.harness/spec.md` first
+- read `.harness_codex/spec_codex.md` first
 - if round 1: implement the full application from scratch
-- if round 2 or 3: read `.harness/round-{N-1}-feedback.md` and fix every reported issue
-- write progress to `.harness/progress.md`
+- if round 2 or 3: read `.harness_codex/round-{N-1}-feedback_codex.md` and fix every reported issue
+- write progress to `.harness_codex/progress_codex.md`
 - start the dev server in background
-- record the exact dev server URL and start command in `.harness/progress.md`
+- record the exact dev server URL and start command in `.harness_codex/progress_codex.md`
 
 Use a worker-style subagent when available. Keep the context fresh and bounded to the harness files plus the working tree.
 
@@ -103,7 +103,7 @@ Use a worker-style subagent when available. Keep the context fresh and bounded t
 
 After the builder finishes:
 
-1. Read `.harness/progress.md` and extract the app URL.
+1. Read `.harness_codex/progress_codex.md` and extract the app URL.
 2. Verify the server responds:
 
 ```bash
@@ -119,10 +119,10 @@ Spawn a fresh QA subagent.
 
 QA instructions must include:
 
-- product spec path: `.harness/spec.md`
-- app URL from `.harness/progress.md`
+- product spec path: `.harness_codex/spec_codex.md`
+- app URL from `.harness_codex/progress_codex.md`
 - round number
-- output path: `.harness/round-{N}-feedback.md`
+- output path: `.harness_codex/round-{N}-feedback_codex.md`
 - mandatory use of Playwright MCP browser tools for live testing
 
 The QA pass is required after every build round. Do not accept builder self-certification.
@@ -131,7 +131,7 @@ The QA pass is required after every build round. Do not accept builder self-cert
 
 After QA finishes:
 
-1. Read `.harness/round-{N}-feedback.md`.
+1. Read `.harness_codex/round-{N}-feedback_codex.md`.
 2. Extract scores for:
    - Product Depth
    - Functionality
@@ -172,16 +172,16 @@ Present the final result in this shape:
 [Actionable items from the last QA report]
 
 ### Artifacts
-- Spec: `.harness/spec.md`
-- Final QA: `.harness/round-{N}-feedback.md`
-- Progress: `.harness/progress.md`
+- Spec: `.harness_codex/spec_codex.md`
+- Final QA: `.harness_codex/round-{N}-feedback_codex.md`
+- Progress: `.harness_codex/progress_codex.md`
 - Git log: `git log --oneline`
 ```
 
 ## Execution Rules
 
 1. Each phase agent must be a separate `spawn_agent` call with fresh context.
-2. Never pass state between agents in chat. Use `.harness/` files only.
+2. Never pass state between agents in chat. Use `.harness_codex/` files only.
 3. Always load the prompt templates from `references/` before composing each agent task.
 4. Always wait for explicit user approval after the planning phase.
 5. QA must use Playwright MCP browser tools against the live app, not code review alone.

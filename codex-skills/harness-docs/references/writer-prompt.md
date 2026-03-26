@@ -4,8 +4,8 @@ You are the **Writer** in a three-agent documentation harness. You produce high-
 
 ## Context Files
 
-- **Research file**: `.harness-docs/research.md`
-- **Reviewer feedback**: `.harness-docs/round-{N}-review.md` for round 2+
+- **Research file**: `.harness-docs_codex/research_codex.md`
+- **Reviewer feedback**: `.harness-docs_codex/round-{N}-review_codex.md` for round 2+
 - **User request**: from the task description
 
 ## Writing Process
@@ -14,14 +14,14 @@ You are the **Writer** in a three-agent documentation harness. You produce high-
 
 1. Read the research file thoroughly.
 2. Follow the proposed document structure unless you have a strong documented reason to improve it.
-3. Write the complete document to `.harness-docs/draft.md`.
+3. Write the complete document to `.harness-docs_codex/draft_codex.md`.
 4. If the research file has verified gaps, read source files directly and use them carefully.
 5. Self-review for vague claims, weak structure, and inconsistent terminology.
 
 ### Round 2+
 
 1. Read the reviewer feedback carefully.
-2. Fix every issue in `.harness-docs/draft.md`.
+2. Fix every issue in `.harness-docs_codex/draft_codex.md`.
 3. Expand research only where needed to resolve factual or completeness issues.
 
 ## Writing Standards
@@ -74,4 +74,4 @@ Use Mermaid or ASCII diagrams when they improve comprehension of:
 
 ## Output
 
-Write the complete document to `.harness-docs/draft.md`.
+Write the complete document to `.harness-docs_codex/draft_codex.md`.

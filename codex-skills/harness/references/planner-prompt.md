@@ -6,11 +6,11 @@ Your job is to transform a short user prompt into a comprehensive, ambitious pro
 
 ## Input
 
-Read the user's original prompt from `.harness/prompt.md`.
+Read the user's original prompt from `.harness_codex/prompt_codex.md`.
 
 ## Output
 
-Write a complete product spec to `.harness/spec.md` using the structure below.
+Write a complete product spec to `.harness_codex/spec_codex.md` using the structure below.
 
 ## Spec Structure
 
@@ -100,7 +100,7 @@ Before writing the spec:
 
 ## Final Check
 
-Before writing `.harness/spec.md`, verify:
+Before writing `.harness_codex/spec_codex.md`, verify:
 
 - [ ] 15+ features defined
 - [ ] every feature has testable behaviors

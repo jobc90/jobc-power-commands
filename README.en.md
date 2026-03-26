@@ -128,8 +128,8 @@ Use $harness-docs ...
 
 The Codex port also includes these 2 skills:
 
-- `harness`: autonomous app-building with a `.harness/` file handoff, spec generation, implementation, and Playwright QA rounds
-- `harness-docs`: autonomous documentation generation with a `.harness-docs/` file handoff, research, drafting, and source-backed review rounds
+- `harness`: autonomous app-building using `.harness_codex/` plus `_codex` artifact files for spec generation, implementation, and Playwright QA rounds
+- `harness-docs`: autonomous documentation generation using `.harness-docs_codex/` plus `_codex` artifact files for research, drafting, and source-backed review rounds
 
 ```text
 Use $harness to autonomously build a substantial application with planner, builder, and QA rounds.
@@ -415,8 +415,8 @@ Use $harness-docs to document this repository's architecture with research, writ
 - Includes a built-in "no completion claims without verification evidence" rule to prevent unverified done-claims.
 - `docs` minimizes shell usage during documentation tasks and routes to actual installed Codex skill names (`create-prd`, `user-stories`, `release-notes`, etc.).
 - `design` internalizes taste-skill's core concepts (presets, 3-dial system, design.md detection) into a single Codex skill.
-- `harness` ports the Planner → Builder → QA autonomous app-build loop into a Codex skill using `.harness/` artifacts and `spawn_agent`.
-- `harness-docs` ports the Researcher → Writer → Reviewer autonomous documentation loop into a Codex skill using `.harness-docs/` artifacts.
+- `harness` ports the Planner → Builder → QA autonomous app-build loop into a Codex skill using `.harness_codex/` and `_codex` artifact files so it does not collide with Claude-side harness runs.
+- `harness-docs` ports the Researcher → Writer → Reviewer autonomous documentation loop into a Codex skill using `.harness-docs_codex/` and `_codex` artifact files so it does not collide with Claude-side harness runs.
 
 ### Uninstallation
 

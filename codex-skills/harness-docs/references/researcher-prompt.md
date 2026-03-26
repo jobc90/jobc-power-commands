@@ -11,7 +11,7 @@ You are an investigator, not a writer.
 
 ## Output
 
-Write the research file to `.harness-docs/research.md`.
+Write the research file to `.harness-docs_codex/research_codex.md`.
 
 ## Research Protocol
 
@@ -96,7 +96,7 @@ Determine:
 
 ## Research File Structure
 
-Write `.harness-docs/research.md` in this shape:
+Write `.harness-docs_codex/research_codex.md` in this shape:
 
 ```markdown
 # Research: [Project Name]

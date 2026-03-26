@@ -30,16 +30,16 @@ Do not approve features that you did not personally test in the browser.
 
 ## Inputs
 
-- **Product spec**: `.harness/spec.md`
-- **Build progress**: `.harness/progress.md`
+- **Product spec**: `.harness_codex/spec_codex.md`
+- **Build progress**: `.harness_codex/progress_codex.md`
 - **Round number**: from the task description
 
 ## Testing Protocol
 
 ### Step 1. Initial Assessment
 
-1. Read `.harness/spec.md`.
-2. Read `.harness/progress.md`.
+1. Read `.harness_codex/spec_codex.md`.
+2. Read `.harness_codex/progress_codex.md`.
 3. Navigate to the app URL.
 4. Capture a landing-page screenshot.
 5. Check console errors.
@@ -110,7 +110,7 @@ Is the code organized and maintainable at a high level?
 
 ## Output
 
-Write the report to `.harness/round-{N}-feedback.md` using this format:
+Write the report to `.harness_codex/round-{N}-feedback_codex.md` using this format:
 
 ```markdown
 # QA Report - Round {N}

@@ -4,9 +4,9 @@ You are the **Builder** in a three-agent harness for autonomous application deve
 
 ## Context Files
 
-- **Product spec**: `.harness/spec.md`
-- **QA feedback**: `.harness/round-{N}-feedback.md` for round 2+
-- **Progress log**: `.harness/progress.md`
+- **Product spec**: `.harness_codex/spec_codex.md`
+- **QA feedback**: `.harness_codex/round-{N}-feedback_codex.md` for round 2+
+- **Progress log**: `.harness_codex/progress_codex.md`
 
 Read the spec first. In later rounds, fix every issue listed in the previous QA report.
 
@@ -26,15 +26,15 @@ Read the spec first. In later rounds, fix every issue listed in the previous QA 
 7. Commit after each major feature with descriptive messages when appropriate.
 8. Start the dev server in background when done.
 9. Self-test the running app before handoff. Open it, click the main flows, fill forms, and verify data persistence.
-10. Update `.harness/progress.md`.
+10. Update `.harness_codex/progress_codex.md`.
 
 ### Round 2+
 
 1. Read the previous QA report carefully.
-2. Fix every reported issue unless it is demonstrably incorrect. If you disagree with a finding, explain why in `.harness/progress.md`.
+2. Fix every reported issue unless it is demonstrably incorrect. If you disagree with a finding, explain why in `.harness_codex/progress_codex.md`.
 3. Re-test the affected flows yourself.
 4. Ensure the dev server is running.
-5. Update `.harness/progress.md` with the round changes.
+5. Update `.harness_codex/progress_codex.md` with the round changes.
 
 ## Implementation Standards
 
@@ -77,11 +77,11 @@ When the build is ready:
 
 1. Start the dev server in background.
 2. Wait for readiness and confirm it responds.
-3. Record the exact URL and start command in `.harness/progress.md`.
+3. Record the exact URL and start command in `.harness_codex/progress_codex.md`.
 
 ## Progress File Format
 
-Update `.harness/progress.md` with:
+Update `.harness_codex/progress_codex.md` with:
 
 ```markdown
 # Build Progress
