@@ -1,5 +1,5 @@
 ---
-description: "3-dial system (Variance/Motion/Density) + presets (landing/dashboard/workspace) for frontend design quality control. init creates/updates design system, auto-integrates with /super."
+description: "3-dial system (Variance/Motion/Density) + presets (landing/dashboard/workspace) for frontend design quality control. init creates/updates design system, auto-integrates with /harness and /harness-team."
 ---
 
 # /design — Frontend Design Quality Control
@@ -144,8 +144,8 @@ density: {N}
 After `/design init` completes, guide the user to the next step:
 ```
 {filename} created/updated.
-Next step: /super Implement the service
-(The design system file will be auto-detected and design rules will be applied)
+Next step: /harness Implement the service
+(The design system file will be auto-detected by the Planner and design rules will be applied)
 ```
 
 In update mode, keep the existing filename (e.g., `BENEEDS_DESIGN_SYSTEM.md` → update the same file).

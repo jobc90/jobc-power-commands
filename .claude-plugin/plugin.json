@@ -1,7 +1,7 @@
 {
   "name": "claudex-power-commands",
-  "description": "6 power commands for Claude Code and Codex: /check (5-angle parallel code review), /cowork (Agent Teams parallel orchestration), /super (idea-to-deployment pipeline), /docs (systematic documentation), /design (3-dial frontend design), /claude-dashboard (statusline setup). Built-in verification, code quality, security, and git rules. Integrates with Anthropic Official plugins, PM Suite, and taste-skill.",
-  "version": "2.1.0",
+  "description": "7 harness commands for Claude Code and Codex: /harness (5-agent build pipeline), /harness-docs (5-agent documentation), /harness-review (5-agent code review + git), /harness-team (parallel multi-worker build), /harness-qa (functional QA with Playwright), /design (3-dial frontend design), /claude-dashboard (statusline). 22 specialized agent prompts with anti-leniency scoring and file-based handoffs.",
+  "version": "3.0.0",
   "author": {
     "name": "jobc90",
     "url": "https://github.com/jobc90"
@@ -9,13 +9,15 @@
   "repository": "https://github.com/jobc90/claudex-power-commands",
   "keywords": [
     "claude-code",
-    "slash-commands",
+    "codex",
+    "harness",
+    "multi-agent",
     "code-review",
-    "agent-teams",
-    "automation",
-    "pipeline",
+    "parallel-build",
+    "qa-testing",
+    "documentation",
     "frontend-design",
-    "taste-skill"
+    "automation"
   ],
   "hooks": {
     "SessionStart": [

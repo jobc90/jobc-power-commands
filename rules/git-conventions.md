@@ -21,8 +21,7 @@ When creating a PR:
 4. Include a test plan
 5. Push with `-u` flag for new branches
 
-## Integration with /check and /super
+## Integration with /harness-review
 
-- /check: after verification, runs `git add → git commit → git push`. With `--pr`: `gh pr create`
-- /super SHIP: same flow. With `--pr`: auto-creates PR
+- /harness-review: after verification, runs `git add → git commit → git push`. With `--pr`: `gh pr create`
 - Commit messages follow the format above

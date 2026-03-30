@@ -55,7 +55,7 @@ for plugin in "${MISSING[@]}"; do
       echo "    claude plugin install --git https://github.com/Leonxlnx/taste-skill"
       ;;
     claude-plugins-official)
-      echo "  claude-plugins-official (4-agent review for /check, feature-dev)"
+      echo "  claude-plugins-official (agents for harness-review, feature-dev)"
       echo "    claude plugin install --git https://github.com/anthropics/claude-plugins-official"
       ;;
     pm-skills)

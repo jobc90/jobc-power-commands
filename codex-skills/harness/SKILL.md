@@ -1,6 +1,6 @@
 ---
 name: harness
-description: "Autonomous application-building harness for `/harness` or `$harness` requests. Use when Codex needs to turn a product idea into a working app through a file-based multi-agent loop: create `.harness_codex/`, write a product spec, wait for user approval, implement the app, run Playwright-based QA, iterate up to 3 rounds, and deliver a final build summary."
+description: Autonomous application-building harness for `/harness` or `$harness` requests. Use when Codex needs to run the same Scout -> Planner -> Builder -> Refiner -> QA workflow as the Claude command, including S/M/L scale handling and file-based handoffs.
 ---
 
 # Harness
@@ -9,39 +9,62 @@ description: "Autonomous application-building harness for `/harness` or `$harnes
 
 Run the Codex version of `/harness`. Treat `/harness` and `$harness` as the same workflow intent inside Codex.
 
-This skill is for substantial app-building requests, not for ordinary coding tasks. It uses a strict file-based handoff model:
+This skill mirrors the Claude harness structure:
 
-`GUARD -> SETUP -> PLAN -> USER APPROVAL -> BUILD/QA LOOP -> SUMMARY`
+`TRIAGE -> SETUP -> SCOUT -> PLAN -> USER APPROVAL -> BUILD/REFINE/QA LOOP -> SUMMARY`
 
 ## Guard Clause
 
-Before starting the harness protocol, confirm the request is actually asking Codex to build an application or substantial prototype.
+Before starting the protocol, confirm the request is actually asking Codex to build, fix, or implement software.
 
 Do not run the harness loop when the user is:
 
 - asking how harness works
 - asking to audit or modify the harness itself
 - asking a normal coding question or a small edit
-- asking for documentation rather than an app build
+- asking for documentation instead of an app build
 
 In those cases, respond directly instead of executing the harness workflow.
+
+## Input Modes
+
+Treat these literal tokens in the user's prompt as workflow hints:
+
+- `$harness`
+- `/harness`
+
+If no token is present but the request clearly means "run the autonomous build harness", this skill still applies.
+
+## Scale Classification
+
+Classify the request before planning:
+
+| Scale | Criteria | Examples |
+|------|----------|----------|
+| `S` | Bug fix, typo, 1-2 file changes, config tweak | fix a broken route, tweak a timeout |
+| `M` | Feature addition, 3-5 file changes, module-level work | add password reset, refactor auth module |
+| `L` | New application, major refactor, 6+ files, multi-module work | build a dashboard app, rewrite payments |
+
+When in doubt between two scales, pick the smaller one.
 
 ## Required Artifacts
 
 Use `.harness_codex/` in the target project directory.
 
-- `.harness_codex/prompt_codex.md`
-- `.harness_codex/spec_codex.md`
-- `.harness_codex/progress_codex.md`
-- `.harness_codex/round-1-feedback_codex.md`
-- `.harness_codex/round-2-feedback_codex.md`
-- `.harness_codex/round-3-feedback_codex.md`
+- `.harness_codex/build-prompt.md`
+- `.harness_codex/build-context.md`
+- `.harness_codex/build-spec.md`
+- `.harness_codex/build-progress.md`
+- `.harness_codex/build-refiner-report.md`
+- `.harness_codex/build-round-1-feedback.md`
+- `.harness_codex/build-round-2-feedback.md`
+- `.harness_codex/build-round-3-feedback.md`
 
 All inter-agent communication must happen through these files only.
 
 ## Phase 1. Setup
 
-1. Identify the target project directory before doing any work.
+1. Identify the target project directory first.
 2. Create the working directory and initialize git if needed:
 
 ```bash
@@ -49,61 +72,120 @@ mkdir -p .harness_codex
 git init 2>/dev/null || true
 ```
 
-3. Write the user's original request to `.harness_codex/prompt_codex.md`.
-4. If the request implies a long-running autonomous build, warn the user that the full loop may take hours and consume significant tokens.
+3. Write the user's original request and classified scale to `.harness_codex/build-prompt.md`.
 
-## Phase 2. Planning
+## Phase 2. Scout
+
+Load `references/scout-prompt.md`.
+
+Use a fresh explore-style subagent:
+
+- keep `fork_context` false
+- pass only the scout prompt plus minimal local context
+- require the agent to write `.harness_codex/build-context.md`
+- scale guidance:
+  - `S`: scan only the 2-5 directly relevant files
+  - `M`: scan the relevant modules, roughly 5-15 files
+  - `L`: comprehensive scan, roughly 20-40 files
+
+After Scout completes, briefly report that codebase context was collected. No approval gate here.
+
+## Phase 3. Planning
 
 Load `references/planner-prompt.md`.
 
-Spawn a fresh subagent for planning:
+### Scale `S`
 
-- use `spawn_agent`
-- keep `fork_context` false
-- pass only the planner prompt template plus the minimal task-local context
-- require the planner to read `.harness_codex/prompt_codex.md`
-- require the planner to write the final output to `.harness_codex/spec_codex.md`
+Do not spawn a Planner agent. Write `.harness_codex/build-spec.md` directly using `.harness_codex/build-context.md` with:
 
-After the planner finishes:
+- task summary
+- files to change
+- existing patterns to follow
+- success criteria
+- risks
 
-1. Read `.harness_codex/spec_codex.md`.
-2. Summarize the spec for the user:
-   - feature count
-   - key features
-   - tech stack
-   - AI integrations
-3. Ask exactly: `Spec을 검토해주세요. 진행할까요, 수정할 부분이 있나요?`
-4. Stop and wait for approval. Do not start implementation before approval.
+Then ask exactly:
 
-## Phase 3. Build-QA Loop
+`Scope를 검토해주세요. 진행할까요?`
+
+Stop and wait for approval.
+
+### Scale `M`
+
+Spawn a fresh planner subagent:
+
+- require it to read `.harness_codex/build-context.md`
+- add `MODE: LITE. Scale is M.`
+- require it to write `.harness_codex/build-spec.md`
+
+After it finishes, summarize the spec and ask:
+
+`Spec을 검토해주세요. 진행할까요?`
+
+Stop and wait for approval.
+
+### Scale `L`
+
+Spawn a fresh planner subagent:
+
+- require it to read `.harness_codex/build-context.md`
+- add `MODE: FULL. Scale is L.`
+- require it to write `.harness_codex/build-spec.md`
+
+After it finishes, summarize the spec and ask:
+
+`Spec을 검토해주세요. 진행할까요, 수정할 부분이 있나요?`
+
+Stop and wait for approval.
+
+## Phase 4. Build-Refine-QA Loop
 
 Load:
 
 - `references/builder-prompt.md`
+- `references/refiner-prompt.md`
 - `references/qa-prompt.md`
 
-Run at most 3 rounds.
+Run at most:
 
-### 3a. Build
+- `S`: 1 round
+- `M`: 2 rounds
+- `L`: 3 rounds
 
-For each round `N` in `1..3`, spawn a fresh builder subagent.
+### 4a. Build
+
+For each round `N`, spawn a fresh builder subagent.
 
 Builder instructions must include:
 
-- read `.harness_codex/spec_codex.md` first
-- if round 1: implement the full application from scratch
-- if round 2 or 3: read `.harness_codex/round-{N-1}-feedback_codex.md` and fix every reported issue
-- write progress to `.harness_codex/progress_codex.md`
-- start the dev server in background
-- record the exact dev server URL and start command in `.harness_codex/progress_codex.md`
+- codebase context: `.harness_codex/build-context.md`
+- product spec: `.harness_codex/build-spec.md`
+- scale: `{S|M|L}`
+- round handling:
+  - round 1: implement the requested changes from the spec
+  - round 2+: read `.harness_codex/build-round-{N-1}-feedback.md` and `.harness_codex/build-refiner-report.md`, then fix every reported issue
+- write progress to `.harness_codex/build-progress.md`
+- for scale `M` and `L`, start the dev server in background and record the URL in `.harness_codex/build-progress.md`
 
-Use a worker-style subagent when available. Keep the context fresh and bounded to the harness files plus the working tree.
+### 4b. Refine
 
-### 3b. Verify Dev Server
+Spawn a fresh refiner subagent.
 
-After the builder finishes:
+Refiner instructions must include:
 
-1. Read `.harness_codex/progress_codex.md` and extract the app URL.
+- codebase context: `.harness_codex/build-context.md`
+- product spec: `.harness_codex/build-spec.md`
+- build progress: `.harness_codex/build-progress.md`
+- scale and round number
+- round 2+: previous QA feedback path
+- apply safe cleanup and hardening directly to the code
+- write `.harness_codex/build-refiner-report.md`
+
+### 4c. Verify Dev Server
+
+For scale `M` and `L` only:
+
+1. Read `.harness_codex/build-progress.md` and extract the app URL.
 2. Verify the server responds:
 
 ```bash
@@ -111,71 +193,71 @@ curl -s -o /dev/null -w '%{http_code}' <URL>
 ```
 
 3. If the server is down, attempt to start it using the recorded command.
-4. If the server still does not run, treat that as a critical QA failure and record it.
+4. If it still does not run, treat that as a critical QA failure.
 
-### 3c. QA
+### 4d. QA
 
 Spawn a fresh QA subagent.
 
 QA instructions must include:
 
-- product spec path: `.harness_codex/spec_codex.md`
-- app URL from `.harness_codex/progress_codex.md`
-- round number
-- output path: `.harness_codex/round-{N}-feedback_codex.md`
-- mandatory use of Playwright MCP browser tools for live testing
+- product spec path: `.harness_codex/build-spec.md`
+- refiner report path: `.harness_codex/build-refiner-report.md`
+- scale and round number
+- output path: `.harness_codex/build-round-{N}-feedback.md`
+- mode:
+  - `S`: code review plus build/test verification only
+  - `M`: Playwright if UI exists, otherwise code review plus build/test
+  - `L`: Playwright is mandatory
+- if UI exists, pass the app URL
 
-The QA pass is required after every build round. Do not accept builder self-certification.
-
-### 3d. Evaluate
+### 4e. Evaluate
 
 After QA finishes:
 
-1. Read `.harness_codex/round-{N}-feedback_codex.md`.
-2. Extract scores for:
-   - Product Depth
-   - Functionality
-   - Visual Design
-   - Code Quality
-3. Report briefly to the user:
+1. Read `.harness_codex/build-round-{N}-feedback.md`.
+2. Extract the criterion scores.
+3. Report briefly:
    - round number
-   - criterion scores
+   - scores
    - pass/fail
-   - key issues found
+   - key issues
 4. Decide:
-   - if every score is `>= 7`, pass and exit the loop
-   - if any score is `< 7` and `N < 3`, continue to the next round
-   - if `N == 3`, stop even if failures remain
+   - all scores `>= 7` -> pass and exit
+   - any score `< 7` and another round remains -> continue
+   - final allowed round reached -> stop even if failures remain
 
-## Phase 4. Final Summary
+## Phase 5. Summary
 
-Present the final result in this shape:
+Use this reporting shape:
 
 ```markdown
-## Harness Build Complete
+## Harness Complete
 
-**Rounds**: {N}/3
+**Scale**: {S|M|L}
+**Rounds**: {N}/{max_rounds}
 **Status**: PASS / PARTIAL
 
-### Final Scores
-| Criterion      | Score | Status |
-|----------------|-------|--------|
-| Product Depth  | X/10  |        |
-| Functionality  | X/10  |        |
-| Visual Design  | X/10  |        |
-| Code Quality   | X/10  |        |
+### Scores
+| Criterion | Score |
+|-----------|-------|
+| ...       | X/10  |
 
-### Features Delivered
-[List features from spec with PASS/PARTIAL/FAIL]
+### Changes
+[files changed and what was delivered]
+
+### Refiner Summary
+[issues found and fixed]
 
 ### Remaining Issues
-[Actionable items from the last QA report]
+[actionable items from the last QA report]
 
 ### Artifacts
-- Spec: `.harness_codex/spec_codex.md`
-- Final QA: `.harness_codex/round-{N}-feedback_codex.md`
-- Progress: `.harness_codex/progress_codex.md`
-- Git log: `git log --oneline`
+- Context: `.harness_codex/build-context.md`
+- Spec: `.harness_codex/build-spec.md`
+- Progress: `.harness_codex/build-progress.md`
+- Refiner: `.harness_codex/build-refiner-report.md`
+- Final QA: `.harness_codex/build-round-{N}-feedback.md`
 ```
 
 ## Execution Rules
@@ -184,6 +266,9 @@ Present the final result in this shape:
 2. Never pass state between agents in chat. Use `.harness_codex/` files only.
 3. Always load the prompt templates from `references/` before composing each agent task.
 4. Always wait for explicit user approval after the planning phase.
-5. QA must use Playwright MCP browser tools against the live app, not code review alone.
-6. If the dev server is not running, QA cannot proceed until that is resolved or explicitly recorded as failure.
-7. If subagents are unavailable, stop and say the harness cannot run as designed. Do not fake the multi-agent loop in a single pass.
+5. The Builder cannot self-certify. Refiner and QA must run after every build round.
+6. The Refiner does not add features. It only cleans, hardens, and aligns with existing patterns.
+7. Scale `S` does not require Playwright.
+8. Scale `M` uses Playwright only when UI exists.
+9. Scale `L` requires live-app QA with Playwright.
+10. If subagents are unavailable, stop and say the harness cannot run as designed. Do not fake the multi-agent loop in one pass.

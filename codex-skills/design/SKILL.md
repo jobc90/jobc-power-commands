@@ -7,7 +7,7 @@ description: Use when Codex needs to create, update, or apply frontend design di
 
 ## Overview
 
-Run the Codex version of `/design`. This skill is based on the taste-skill ecosystem, but customized so Codex can use the same frontend design workflow without requiring Claude-only slash command behavior.
+Run the Codex version of `/design`. This skill is based on the taste-skill ecosystem, but customized so Codex can use the same frontend design workflow without requiring Claude-only slash command behavior. It is the shared design controller for `$harness` and `$harness-team` when a design-system file exists or the user explicitly requests design direction.
 
 ## Input Modes
 
@@ -155,9 +155,9 @@ density: {N}
 
 If redesign mode is active, add a `## Current Problems` section before `## Goal`.
 
-## Super Integration
+## Harness Integration
 
-When `$super --design` is used, or when `$super` finds a design-system file, `$design` becomes the design controller for every frontend slice.
+When `$harness` or `$harness-team` is used, and the request is UI-heavy or a design-system file is present, `$design` becomes the design controller for every frontend slice.
 
 Pass these into the frontend work:
 
@@ -184,4 +184,5 @@ Use this reporting structure:
 - `Use $design --landing for the marketing site.`
 - `Use $design --dashboard for this analytics UI.`
 - `Use $design --v 8 --m 7 --d 2 for a luxury landing page.`
-- `Use $super --design admin to build the control panel.`
+- `Use $harness to build the app and apply the detected design system.`
+- `Use $harness-team for the build, and keep the admin UI on the admin preset.`

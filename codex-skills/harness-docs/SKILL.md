@@ -1,6 +1,6 @@
 ---
 name: harness-docs
-description: Autonomous documentation-building harness for `/harness-docs` or `$harness-docs` requests. Use when Codex needs to research a codebase, propose document scope, wait for user approval, draft documentation, fact-check it against source files, iterate up to 3 review rounds, and finalize the document through a file-based multi-agent loop in `.harness-docs_codex/`.
+description: Autonomous documentation harness for `/harness-docs` or `$harness-docs` requests. Use when Codex needs the same Researcher -> Outliner -> Writer -> Reviewer + Validator workflow as the Claude command, including S/M/L scaling and file-based handoffs.
 ---
 
 # Harness Docs
@@ -9,9 +9,9 @@ description: Autonomous documentation-building harness for `/harness-docs` or `$
 
 Run the Codex version of `/harness-docs`. Treat `/harness-docs` and `$harness-docs` as the same workflow intent inside Codex.
 
-This skill is for substantial documentation or codebase-analysis requests that need deliberate research, drafting, and fact-checking:
+This skill mirrors the Claude harness-docs structure:
 
-`GUARD -> SETUP -> RESEARCH -> USER APPROVAL -> WRITE/REVIEW LOOP -> FINALIZE -> SUMMARY`
+`TRIAGE -> SETUP -> RESEARCH -> OUTLINE -> USER APPROVAL -> WRITE/REVIEW LOOP -> FINALIZE -> SUMMARY`
 
 ## Guard Clause
 
@@ -22,7 +22,7 @@ Run this skill when the user wants things like:
 - project documentation
 - README or onboarding docs
 - architecture overviews
-- PRD or spec-like documents
+- PRDs or technical specs
 - migration guides
 - deep codebase analysis that results in written documentation
 
@@ -34,16 +34,41 @@ Do not run this workflow when the user is:
 
 In those cases, respond directly.
 
+## Input Modes
+
+Treat these literal tokens in the user's prompt as workflow hints:
+
+- `$harness-docs`
+- `/harness-docs`
+
+If no token is present but the request clearly means "run the autonomous documentation harness", this skill still applies.
+
+## Scale Classification
+
+Classify the request before research:
+
+| Scale | Criteria | Examples |
+|------|----------|----------|
+| `S` | Single-focus output, 1-2 sources, short output | QA checklist, endpoint list, short summary |
+| `M` | Multi-section doc, 3-5 sources, medium-length | module API docs, migration guide |
+| `L` | Comprehensive doc, full codebase scan, large output | architecture docs, onboarding guide |
+
+When in doubt between two scales, pick the smaller one.
+
 ## Required Artifacts
 
-Use `.harness-docs_codex/` in the target project directory.
+Use `.harness_codex/docs-` in the target project directory.
 
-- `.harness-docs_codex/request_codex.md`
-- `.harness-docs_codex/research_codex.md`
-- `.harness-docs_codex/draft_codex.md`
-- `.harness-docs_codex/round-1-review_codex.md`
-- `.harness-docs_codex/round-2-review_codex.md`
-- `.harness-docs_codex/round-3-review_codex.md`
+- `.harness_codex/docs-request.md`
+- `.harness_codex/docs-research.md`
+- `.harness_codex/docs-outline.md`
+- `.harness_codex/docs-draft.md`
+- `.harness_codex/docs-round-1-review.md`
+- `.harness_codex/docs-round-2-review.md`
+- `.harness_codex/docs-round-3-review.md`
+- `.harness_codex/docs-round-1-validation.md`
+- `.harness_codex/docs-round-2-validation.md`
+- `.harness_codex/docs-round-3-validation.md`
 
 All inter-agent communication must happen through these files only.
 
@@ -53,139 +78,198 @@ All inter-agent communication must happen through these files only.
 2. Create the working directory:
 
 ```bash
-mkdir -p .harness-docs_codex
+mkdir -p .harness_codex
 ```
 
-3. Write the user's request to `.harness-docs_codex/request_codex.md`, capturing:
-   - requested document type
-   - expected scope and depth
-   - target audience when specified
+3. Write the user's request and classified scale to `.harness_codex/docs-request.md`.
 
 ## Phase 2. Research
 
 Load `references/researcher-prompt.md`.
 
-Spawn a fresh research subagent:
+### Scale `S`
 
-- use `spawn_agent`
-- keep `fork_context` false
-- pass only the researcher prompt template plus minimal local context
-- require the agent to explore the actual codebase
-- require the agent to write `.harness-docs_codex/research_codex.md`
+Do not spawn a Researcher agent. The orchestrator directly:
 
-After the researcher finishes:
+1. reads only the files relevant to the request
+2. writes a brief `.harness_codex/docs-research.md`
 
-1. Read `.harness-docs_codex/research_codex.md`.
-2. Present a scope summary to the user:
-   - project name and type
-   - key areas discovered
-   - proposed document structure
-   - estimated size
-3. Ask exactly: `리서치 범위와 문서 구조를 검토해주세요. 진행할까요, 조정할 부분이 있나요?`
-4. Stop and wait for approval.
+Then proceed directly to Outline.
 
-## Phase 3. Write-Review Loop
+### Scale `M`
+
+Spawn a fresh focused research subagent:
+
+- add `MODE: FOCUSED. Scale is M.`
+- require output at `.harness_codex/docs-research.md`
+
+### Scale `L`
+
+Spawn a fresh full research subagent:
+
+- add `MODE: FULL. Scale is L.`
+- require output at `.harness_codex/docs-research.md`
+
+## Phase 3. Outline
+
+Load `references/outliner-prompt.md`.
+
+### Scale `S`
+
+Do not spawn an Outliner agent. Write `.harness_codex/docs-outline.md` directly with:
+
+- document type
+- intended sections
+- what each section covers
+
+Then ask exactly:
+
+`문서 범위와 구조를 검토해주세요. 진행할까요?`
+
+Stop and wait for approval.
+
+### Scale `M`
+
+Spawn a fresh outliner subagent:
+
+- input research file: `.harness_codex/docs-research.md`
+- scale: `M`
+- output: `.harness_codex/docs-outline.md`
+
+After it finishes, summarize the structure and ask:
+
+`문서 구조를 검토해주세요. 진행할까요?`
+
+Stop and wait for approval.
+
+### Scale `L`
+
+Spawn a fresh outliner subagent:
+
+- input research file: `.harness_codex/docs-research.md`
+- scale: `L`
+- output: `.harness_codex/docs-outline.md`
+
+After it finishes, summarize the structure and ask:
+
+`문서 구조를 검토해주세요. 진행할까요, 조정할 부분이 있나요?`
+
+Stop and wait for approval.
+
+## Phase 4. Write-Review Loop
 
 Load:
 
 - `references/writer-prompt.md`
 - `references/reviewer-prompt.md`
+- `references/validator-prompt.md`
 
-Run at most 3 rounds.
+Run at most:
 
-### 3a. Write
+- `S`: 1 round
+- `M`: 2 rounds
+- `L`: 3 rounds
 
-For each round `N` in `1..3`, spawn a fresh writer subagent.
+### 4a. Write
+
+Spawn a fresh writer subagent for each round.
 
 Writer instructions must include:
 
-- research baseline: `.harness-docs_codex/research_codex.md`
+- research baseline: `.harness_codex/docs-research.md`
+- document blueprint: `.harness_codex/docs-outline.md`
 - user's original request
-- if round 1: write the full draft to `.harness-docs_codex/draft_codex.md`
-- if round 2 or 3: read `.harness-docs_codex/round-{N-1}-review_codex.md` and address every issue in `.harness-docs_codex/draft_codex.md`
-- source code may be read directly to fill verified gaps
+- if round 1: write `.harness_codex/docs-draft.md`
+- if round 2+: read `.harness_codex/docs-round-{N-1}-review.md` and `.harness_codex/docs-round-{N-1}-validation.md`, then revise `.harness_codex/docs-draft.md`
 
-### 3b. Review
+### 4b. Review + Validate
 
-Spawn a fresh reviewer subagent.
+Scale `S`: skip reviewer and validator, then proceed to Finalize.
+
+Scale `M` and `L`: spawn both in parallel.
 
 Reviewer instructions must include:
 
-- draft path: `.harness-docs_codex/draft_codex.md`
-- research baseline: `.harness-docs_codex/research_codex.md`
-- original user request
+- draft path: `.harness_codex/docs-draft.md`
+- research baseline: `.harness_codex/docs-research.md`
+- document blueprint: `.harness_codex/docs-outline.md`
 - round number
-- output path: `.harness-docs_codex/round-{N}-review_codex.md`
-- mandatory fact-checking against real source files and config files
+- output path: `.harness_codex/docs-round-{N}-review.md`
 
-The reviewer cannot rely on the draft alone.
+Validator instructions must include:
 
-### 3c. Evaluate
+- draft path: `.harness_codex/docs-draft.md`
+- research baseline: `.harness_codex/docs-research.md`
+- round number
+- output path: `.harness_codex/docs-round-{N}-validation.md`
 
-After the reviewer finishes:
+### 4c. Evaluate
 
-1. Read `.harness-docs_codex/round-{N}-review_codex.md`.
-2. Extract scores for:
-   - Completeness
-   - Accuracy
-   - Coherence
-   - Clarity
-3. Report briefly to the user:
+After both reviewer and validator finish:
+
+1. Read the review and validation reports.
+2. Extract:
+   - review scores
+   - validation pass/fail summary
+3. Report briefly:
    - round number
    - criterion scores
-   - pass/fail
-   - key issues found
+   - validation summary
+   - key issues
 4. Decide:
-   - if every score is `>= 7`, pass and exit the loop
-   - if any score is `< 7` and `N < 3`, continue
-   - if `N == 3`, stop even if issues remain
+   - all review criteria `>= 7` and zero failed validations -> pass
+   - otherwise continue if another round remains
+   - stop on the final allowed round
 
-## Phase 4. Finalize
+## Phase 5. Finalize
 
 After the loop ends:
 
-1. Read the final `.harness-docs_codex/draft_codex.md`.
+1. Read the final `.harness_codex/docs-draft.md`.
 2. Ask the user where to save it if no path was specified.
-3. Default to project root or `docs/` when the user has not chosen a destination.
+3. Default to project root or `docs/` when no destination is given.
 4. Copy or move the final document to the chosen path.
-5. Keep or remove `.harness-docs_codex/` only if the user explicitly requests cleanup.
+5. Keep or remove `.harness_codex/docs-` only if the user explicitly requests cleanup.
 
-## Phase 5. Summary
+## Phase 6. Summary
 
-Present the final result in this shape:
+Use this reporting shape:
 
 ```markdown
 ## Harness-Docs Complete
 
-**Rounds**: {N}/3
+**Scale**: {S|M|L}
+**Rounds**: {N}/{max_rounds}
 **Status**: PASS / PARTIAL
 
-### Final Scores
-| Criterion         | Score | Status |
-|-------------------|-------|--------|
-| Completeness      | X/10  |        |
-| Accuracy          | X/10  |        |
-| Logical Coherence | X/10  |        |
-| Clarity           | X/10  |        |
+### Review Scores
+| Criterion | Score |
+|-----------|-------|
+| ...       | X/10  |
 
-### Document Stats
-- Sections: X
-- Approximate length: X lines / X words
-- Source files referenced: X
+### Validation Summary
+- PASS: X
+- FAIL: X
+- CONDITIONAL: X
+
+### Output
+- Final document: {path}
 
 ### Artifacts
-- Research: `.harness-docs_codex/research_codex.md`
-- Final document: `{final path}`
-- Last review: `.harness-docs_codex/round-{N}-review_codex.md`
+- Research: `.harness_codex/docs-research.md`
+- Outline: `.harness_codex/docs-outline.md`
+- Draft: `.harness_codex/docs-draft.md`
+- Last review: `.harness_codex/docs-round-{N}-review.md`
+- Last validation: `.harness_codex/docs-round-{N}-validation.md`
 ```
 
 ## Execution Rules
 
 1. Each phase agent must be a separate `spawn_agent` call with fresh context.
-2. Never pass state between agents in chat. Use `.harness-docs_codex/` files only.
+2. Never pass state between agents in chat. Use `.harness_codex/docs-` files only.
 3. Always load the prompt templates from `references/` before composing each agent task.
-4. Always wait for explicit user approval after the research phase.
-5. The reviewer must fact-check against actual files, not just read the draft.
-6. The researcher must explore the actual codebase, not infer from filenames alone.
+4. Always wait for explicit user approval after the outline phase.
+5. The Reviewer fact-checks by reading source code. The Validator fact-checks by executing commands and examples.
+6. Scale `S` skips the review loop and validation for efficiency.
 7. Match the document language to the user's request language.
 8. If subagents are unavailable, stop and say the harness cannot run as designed. Do not fake the loop in one pass.

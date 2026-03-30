@@ -35,9 +35,9 @@ When a security issue is found:
 3. Rotate any exposed secrets
 4. Review the entire codebase for similar issues
 
-## /check Security Angle Reference
+## /harness-review Security Angle Reference
 
-The 5th angle (Security) of the /check command inspects:
+The 5th angle (Security) of the /harness-review Analyzer inspects:
 - Injection vectors (SQL, command, HTML, URL)
 - Hardcoded secrets
 - Authentication/authorization gaps

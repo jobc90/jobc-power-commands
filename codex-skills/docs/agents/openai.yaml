@@ -1,6 +1,0 @@
-interface:
-  display_name: "Docs"
-  short_description: "Create or update docs from code and source material"
-  default_prompt: "Use $docs to analyze the request, gather source material, choose the right template, and produce the documentation."
-  policy:
-    allow_implicit_invocation: true

@@ -245,10 +245,11 @@
 
 | 도메인 | claudex-power-commands | 외부 플러그인 | 규칙 |
 |--------|-------------------|-------------|------|
-| 코드 리뷰 + 배포 | `/check` | `/review-pr` (Official) | /check 우선 (검증+배포 포함) |
-| 병렬 오케스트레이션 | `/cowork` | — | 자체 전용 |
-| 풀 파이프라인 | `/super` | `/feature-dev` (Official) | /super 우선 (디자인 연동) |
-| 문서화 | `/docs` | — | 자체 전용 |
+| 단일 빌더 구현 | `/harness` | `/feature-dev` (Official) | /harness 우선 (5-에이전트 파이프라인) |
+| 코드 리뷰 + 배포 | `/harness-review` | `/review-pr` (Official) | /harness-review 우선 (5각도 + git 핸드오프) |
+| 병렬 팀 빌드 | `/harness-team` | — | 자체 전용 |
+| 문서화 | `/harness-docs` | — | 자체 전용 |
+| 기능 QA | `/harness-qa` | — | 자체 전용 |
 | 디자인 | `/design` | taste-skill 직접 사용 | /design 우선 (통합 진입점) |
 | PM/전략 | PM 커맨드 라우팅 | PM Suite 전체 | 외부 PM Suite 활용 |
 
