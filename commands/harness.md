@@ -1,3 +1,7 @@
+---
+description: "Autonomous 5-agent builder pipeline (Scout → Planner → Builder → Refiner → QA) for single-builder implementation tasks (S/M/L scale)."
+---
+
 # Harness: Autonomous Builder (v3)
 
 > Anthropic "Harness Design for Long-Running Apps" 5-agent architecture.

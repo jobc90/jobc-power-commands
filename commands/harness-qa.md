@@ -1,3 +1,7 @@
+---
+description: "5-agent functional QA pipeline (Scout → Scenario Writer → Test Executor → Analyst → Reporter) with Playwright-based verification."
+---
+
 # Harness-QA: Functional QA Pipeline (v1)
 
 > 5-agent harness for comprehensive functional testing against live/deployed environments.

@@ -1,3 +1,7 @@
+---
+description: "5-agent code review pipeline (Scanner → Analyzer → Fixer → Verifier → Reporter) with git handoff support."
+---
+
 # Harness-Review: Code Review Pipeline (v1)
 
 > 5-agent harness for post-implementation code review.

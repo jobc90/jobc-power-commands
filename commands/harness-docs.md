@@ -1,3 +1,7 @@
+---
+description: "Autonomous 5-agent documentation pipeline (Researcher → Outliner → Writer → Reviewer + Validator) for document generation tasks (S/M/L scale)."
+---
+
 # Harness-Docs: Autonomous Documentation Builder (v3)
 
 > Anthropic harness pattern adapted for ALL documentation and analysis tasks.

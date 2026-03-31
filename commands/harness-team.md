@@ -1,3 +1,7 @@
+---
+description: "5-agent parallel team build pipeline (Scout → Architect → Workers(N) → Integrator → QA) for multi-worker implementation."
+---
+
 # Harness-Team: Parallel Team Build (v1)
 
 > 5-agent harness for parallel multi-worker implementation.
