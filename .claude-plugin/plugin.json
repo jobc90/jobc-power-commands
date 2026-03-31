@@ -1,5 +1,5 @@
 {
-  "name": "claudex-power-commands",
+  "name": "claudex",
   "description": "7 harness commands for Claude Code and Codex: /harness (5-agent build pipeline), /harness-docs (5-agent documentation), /harness-review (5-agent code review + git), /harness-team (parallel multi-worker build), /harness-qa (functional QA with Playwright), /design (3-dial frontend design), /claude-dashboard (statusline). 22 specialized agent prompts with anti-leniency scoring and file-based handoffs.",
   "version": "3.0.0",
   "author": {
