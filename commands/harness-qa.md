@@ -1,11 +1,12 @@
 ---
-description: "5-agent functional QA pipeline (Scout → Scenario Writer → Test Executor → Analyst → Reporter) with Playwright-based verification."
+description: "5-agent functional QA pipeline (Scout → Scenario Writer → Test Executor → Analyst → Reporter) with Playwright-based verification. Supports 8 test modes: full, onboarding, forms, responsive, regression, journey, a11y, pre-launch."
 ---
 
-# Harness-QA: Functional QA Pipeline (v1)
+# Harness-QA: Functional QA Pipeline (v2)
 
 > 5-agent harness for comprehensive functional testing against live/deployed environments.
 > Scout → Scenario Writer → Test Executor → Analyst → Reporter with Playwright-based verification.
+> **v2**: 8 specialized test modes for targeted, expert-level QA.
 
 ## User Request
 
@@ -23,6 +24,8 @@ Proceed when the user wants to:
 - Verify features work end-to-end
 - Find bugs in an existing application
 - Generate a QA report with actionable fix items
+- Audit onboarding, forms, responsiveness, accessibility, or user journeys
+- Run pre-launch QA or visual regression checks
 
 ### Required Information
 
@@ -34,13 +37,15 @@ Optional but helpful:
 - Database connection info (for data verification)
 - Specific areas to focus on
 - Known issues to skip
+- CSS/code changes made (for `--mode regression`)
 
 ## Architecture Overview
 
 ```
 /harness-qa <target-url> [options]
   |
-  +- Phase 1: Setup             -> .harness/qa- directory
+  +- Phase 0: Guard + Mode Selection
+  +- Phase 1: Setup             -> .harness/qa- directory + mode config
   +- Phase 2: Scout              -> Scout agent -> .harness/qa-context.md
   +- Phase 3: Scenarios           -> Scenario Writer -> .harness/qa-scenarios.md
   |                               -> User reviews and approves
@@ -54,9 +59,30 @@ Optional but helpful:
 ## Arguments
 
 - First argument: target URL or task description (required)
+- `--mode <mode>`: test mode (default: `full`) — see Test Modes below
 - `--focus <area>`: focus testing on specific module/feature
 - `--user-types <types>`: limit to specific user types (comma-separated)
 - `--quick`: CRITICAL scenarios only (skip HIGH/MEDIUM)
+- `--viewports <sizes>`: custom viewport sizes for responsive mode (default: `375,768,1280,1920`)
+- `--change <description>`: describe what changed (for regression mode)
+
+## Test Modes
+
+| Mode | Purpose | Scout Focus | Key Capability |
+|------|---------|-------------|----------------|
+| `full` | Comprehensive functional QA (default) | All routes, users, features | Full scenario matrix |
+| `onboarding` | Onboarding flow audit | Signup/onboarding steps, first-use flows | Drop-off detection, state screenshots |
+| `forms` | Form validation & edge cases | All forms, inputs, validation rules | Boundary values, XSS vectors, error UX |
+| `responsive` | Cross-viewport layout testing | Key pages, layout components | Multi-viewport screenshots, overflow detection |
+| `regression` | Visual regression after deployment | Changed pages/components | Before/after comparison, unintended side effects |
+| `journey` | User journey documentation | Complete user flows from landing to value | Screenshot map, timing, confusion points |
+| `a11y` | Accessibility spot check (WCAG) | Interactive elements, forms, color usage | Contrast, focus states, labels, tap targets |
+| `pre-launch` | Pre-launch test plan generation | Full feature inventory | Test plan document (no execution) |
+
+### Mode Combinations
+
+Modes can be combined: `--mode forms,a11y` runs both form testing and accessibility checks.
+`--mode full` includes all modes by default but with less depth per mode.
 
 ---
 
@@ -66,7 +92,13 @@ Optional but helpful:
 mkdir -p .harness
 ```
 
-Write the user's request, target URL, credentials, and options to `.harness/qa-prompt.md`.
+Write the user's request, target URL, credentials, options, and **selected mode** to `.harness/qa-prompt.md`.
+
+Include in the prompt file:
+- Selected mode(s) and their implications
+- For `regression` mode: the `--change` description
+- For `responsive` mode: the viewport sizes to test
+- For `pre-launch` mode: launch date if provided
 
 **CRITICAL**: Never write raw credentials (passwords, tokens) to files. Reference them as "provided in task description" or use environment variable names.
 
@@ -80,12 +112,26 @@ Launch a **general-purpose Agent** with subagent_type `Explore`:
 - **prompt**: The scout prompt template + context:
   - "Project directory: `{cwd}`"
   - "User's request: `{$ARGUMENTS}`"
-  - "Scale: L — comprehensive scan for QA purposes. Focus on: all routes/pages, all user types/roles, all API endpoints, database schema, auth/permission system."
+  - "Scale: L — comprehensive scan for QA purposes."
+  - "**Test mode**: `{selected mode}`"
   - "Write output to `.harness/qa-context.md`"
-  - "ADDITIONAL QA FOCUS: Map every page/route accessible to each user type. List all form inputs, all CRUD operations, all state transitions."
+  - Mode-specific focus instructions (see below)
 - **description**: "harness-qa scout"
 
-After Scout completes, briefly confirm: **"Scout 완료. [X]개 라우트, [Y]개 유저 타입, [Z]개 핵심 기능 감지."**
+### Mode-Specific Scout Focus
+
+| Mode | Scout Must Discover |
+|------|-------------------|
+| `full` | All routes, user types, API endpoints, DB schema, auth system, forms, CRUD ops, state transitions |
+| `onboarding` | Signup flow steps, onboarding sequence, first-use gates, welcome screens, tutorial triggers, activation metrics |
+| `forms` | ALL form elements (inputs, selects, textareas, checkboxes), validation rules in code, error message patterns, required fields, field constraints (maxLength, pattern) |
+| `responsive` | Key pages list, CSS breakpoints in use, layout components (grid, flex, sidebar, nav), media queries, mobile-specific components |
+| `regression` | Changed files (from `--change` or recent git diff), affected routes/components, CSS dependencies, shared style files |
+| `journey` | Landing page, signup, onboarding, dashboard, core feature pages — full user flow from first visit to value moment |
+| `a11y` | Interactive elements, form labels, color palette/theme, icon-only buttons, focus management patterns, aria attributes in code |
+| `pre-launch` | Complete feature inventory, all modules, all user types, all integrations, env dependencies, known risk areas |
+
+After Scout completes, briefly confirm: **"Scout 완료. [X]개 라우트, [Y]개 유저 타입, [Z]개 핵심 기능 감지. 모드: {mode}."**
 
 ---
 
@@ -98,19 +144,36 @@ Launch a **general-purpose Agent**:
   - "Codebase context: `.harness/qa-context.md`"
   - "Target URL: `{URL}`"
   - "Test credentials: `{provided credentials — pass securely}`"
+  - "**Test mode**: `{selected mode}`"
   - "Focus area: `{--focus value if provided, otherwise 'all features'}`"
   - "User types: `{--user-types value if provided, otherwise 'all types from context'}`"
   - "Quick mode: `{--quick if specified}`"
+  - "Viewports: `{--viewports value if responsive mode}`"
+  - "Change description: `{--change value if regression mode}`"
   - "Write output to `.harness/qa-scenarios.md`"
-- **description**: "harness-qa scenario writer"
+- **description**: "harness-qa scenario writer ({mode})"
+
+### Special Mode Behavior — `pre-launch`
+
+For `pre-launch` mode, the Scenario Writer produces a **Test Plan document** instead of executable scenarios:
+- Core user flows with acceptance criteria
+- Test cases per module
+- Edge case and negative test inventory
+- Device/browser test matrix
+- Risk areas requiring extra attention
+- Time estimate per test case
+- **Output**: `.harness/qa-test-plan.md`
+- **Pipeline stops here** — no Phase 4/5. Present the test plan to the user.
 
 After completion:
-- Read `.harness/qa-scenarios.md`
+- Read `.harness/qa-scenarios.md` (or `qa-test-plan.md` for pre-launch)
 - Present summary to user:
   - Total scenarios count
-  - Coverage matrix (feature × user type)
+  - Coverage matrix (feature × user type, or mode-specific matrix)
   - CRITICAL/HIGH/MEDIUM breakdown
   - Any CREDENTIALS NEEDED flags
+  - For `responsive`: viewport × page matrix
+  - For `a11y`: WCAG criterion coverage
 - Ask: **"테스트 시나리오를 검토해주세요. 진행할까요, 추가/수정할 시나리오가 있나요?"**
 - **WAIT for user approval.**
 
@@ -119,6 +182,8 @@ After completion:
 ## Phase 4: Execute-Analyze Loop
 
 Read the test executor and analyst prompt templates from `~/.claude/harness/`.
+
+**Skip this phase entirely for `pre-launch` mode** (pipeline ends at Phase 3).
 
 ### Max rounds: 2
 
@@ -131,10 +196,24 @@ Launch a **general-purpose Agent**:
   - "Test scenarios: `.harness/qa-scenarios.md`"
   - "Target URL: `{URL}`"
   - "Test credentials: `{provided credentials}`"
+  - "**Test mode**: `{selected mode}`"
   - "Write output to `.harness/qa-results.md`"
   - If round 2: "This is a re-test after fixes. Focus on previously FAIL/PARTIAL scenarios. Reference `.harness/qa-analysis.md` for what was fixed."
   - "You MUST use Playwright MCP tools (mcp__playwright__*) to test the live app."
-- **description**: "harness-qa test executor round {R}"
+  - Mode-specific executor instructions (see below)
+- **description**: "harness-qa test executor round {R} ({mode})"
+
+### Mode-Specific Executor Instructions
+
+| Mode | Special Executor Behavior |
+|------|--------------------------|
+| `full` | Standard execution — all scenarios by priority |
+| `onboarding` | Screenshot EVERY step/state. Time each transition. Note loading states, empty states, error states. Flag drop-off points where a user would abandon. |
+| `forms` | Use the **Form Test Pattern Library** (see executor prompt). Test empty submit, 500+ char strings, special chars (`@#$%'"<>`), invalid formats, SQL/XSS vectors. Screenshot every error and success state. |
+| `responsive` | Use `mcp__playwright__browser_resize` at each viewport (375, 768, 1280, 1920 or custom). Screenshot each page at each viewport. Check: text clipping, overflow, button overlap, nav collapse, CTA visibility. |
+| `regression` | Screenshot the 5+ most important pages. Compare against expected layout. Flag shifted elements, color changes, broken hover states, spacing differences. Verify the intended change applied. |
+| `journey` | Screenshot every screen from landing to core value moment. Time each step. Note confusion points, unnecessary friction, missing feedback. Build a visual journey map. |
+| `a11y` | Check: low-contrast text, small tap targets (<44px), missing form labels, color-only status indicators, missing focus states, missing aria attributes. Use `browser_snapshot` for accessibility tree inspection. |
 
 After completion:
 - Read `.harness/qa-results.md`
@@ -147,8 +226,9 @@ Launch a **general-purpose Agent**:
   - "Test results: `.harness/qa-results.md`"
   - "Test scenarios: `.harness/qa-scenarios.md`"
   - "Codebase context: `.harness/qa-context.md`"
+  - "**Test mode**: `{selected mode}`"
   - "Write output to `.harness/qa-analysis.md`"
-- **description**: "harness-qa analyst"
+- **description**: "harness-qa analyst ({mode})"
 
 #### 4c. Evaluate
 
@@ -159,9 +239,21 @@ After Analyst completes:
    - CRITICAL bug count
    - Pattern count
    - Missing feature count
+   - Mode-specific metrics (see below)
 3. **Decision**:
    - If user wants to fix and re-test → proceed to round 2 (user fixes bugs, then re-runs Phase 4)
    - Otherwise → proceed to Phase 5
+
+### Mode-Specific Evaluation Metrics
+
+| Mode | Additional Metrics |
+|------|-------------------|
+| `onboarding` | Steps to activation, estimated drop-off rate, blocking UX issues |
+| `forms` | Vulnerable fields count, silent failure count, invalid-accept count |
+| `responsive` | Viewport breakage matrix (which pages break at which sizes) |
+| `regression` | Intended changes verified, unintended regressions found |
+| `journey` | Total journey time, friction point count, screenshot count |
+| `a11y` | WCAG violations by severity, affected component count |
 
 ---
 
@@ -175,15 +267,16 @@ Launch a **general-purpose Agent**:
   - "Test results: `.harness/qa-results.md`"
   - "Test scenarios: `.harness/qa-scenarios.md`"
   - "Codebase context: `.harness/qa-context.md`"
+  - "**Test mode**: `{selected mode}`"
   - "Write output to `.harness/qa-report.md`"
-- **description**: "harness-qa reporter"
+- **description**: "harness-qa reporter ({mode})"
 
 After completion:
 - Read `.harness/qa-report.md`
 - Present user-facing summary:
 
 ```
-## QA Complete
+## QA Complete ({mode} mode)
 
 **Grade**: [A/B/C/D/F] ([score]%)
 **Verdict**: [READY / READY_WITH_ISSUES / NOT_READY]
@@ -213,11 +306,22 @@ Full report: `.harness/qa-report.md`
 7. **The Analyst does NOT re-test.** It analyzes results from the Executor.
 8. **Read prompt templates from `~/.claude/harness/`** before spawning each agent.
 9. **Quick mode (`--quick`)**: Scenario Writer generates only CRITICAL scenarios. Test Executor skips HIGH/MEDIUM.
+10. **Mode is passed to EVERY agent.** Each agent adapts its behavior based on the selected mode.
+11. **`pre-launch` mode stops at Phase 3.** It produces a test plan, not test results.
+12. **`responsive` mode requires `browser_resize`** at every viewport before screenshots.
+13. **`regression` mode requires `--change` description** to know what to verify.
 
 ## Cost Awareness
 
 | Mode | Duration | Agent Calls |
 |------|---------|-------------|
-| `--quick` | 10-20 min | 4 (scout + scenario + executor + analyst + reporter) |
-| default | 20-45 min | 5 (scout + scenario + executor + analyst + reporter) |
+| `--quick` | 10-20 min | 5 (scout + scenario + executor + analyst + reporter) |
+| `full` (default) | 20-45 min | 5 (scout + scenario + executor + analyst + reporter) |
+| `onboarding` | 15-30 min | 5 |
+| `forms` | 20-40 min | 5 |
+| `responsive` | 15-30 min | 5 (screenshots × viewports) |
+| `regression` | 10-25 min | 5 |
+| `journey` | 15-30 min | 5 |
+| `a11y` | 15-25 min | 5 |
+| `pre-launch` | 5-15 min | 2 (scout + scenario writer only) |
 | re-test (round 2) | +15-30 min | +2 (executor + analyst) |
